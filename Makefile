@@ -15,7 +15,7 @@ endif
 
 # C++ specific options here (added to USE_OPT).
 ifeq ($(USE_CPPOPT),)
-  USE_CPPOPT = -fno-rtti
+  USE_CPPOPT = -fno-rtti -fno-non-call-exceptions -fno-exceptions -fno-threadsafe-statics
 endif
 
 # Enable this if you want the linker to remove unused code and data
@@ -40,7 +40,7 @@ endif
 
 # Enable this if you want to see the full log while compiling.
 ifeq ($(USE_VERBOSE_COMPILE),)
-  USE_VERBOSE_COMPILE = no
+  USE_VERBOSE_COMPILE = yes
 endif
 
 # If enabled, this option makes the build process faster by not compiling
@@ -74,6 +74,11 @@ ifeq ($(USE_FPU),)
   USE_FPU = hard
 endif
 
+# FPU-related options.
+ifeq ($(USE_FPU_OPT),)
+  USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv5-sp-d16 -fsingle-precision-constant
+endif
+
 #
 # Architecture or project specific options
 ##############################################################################
@@ -88,21 +93,20 @@ PROJECT = exBusPowerBox
 # Imported source files and paths
 CHIBIOS = ../../chibios176
 # Startup files.
-include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f4xx.mk
+include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f7xx.mk
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
-include $(CHIBIOS)/os/hal/ports/STM32/STM32F4xx/platform.mk
-include $(CHIBIOS)/os/hal/boards/ST_STM32F4_DISCOVERY/board.mk
+include $(CHIBIOS)/os/hal/ports/STM32/STM32F7xx/platform.mk
+include $(CHIBIOS)/os/hal/boards/PP_EXBUSPOWERBOX/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Other files (optional).
-include $(CHIBIOS)/test/rt/test.mk
 include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 
 # Define linker script file here
-LDSCRIPT= $(STARTUPLD)/STM32F405xG.ld
+LDSCRIPT= $(STARTUPLD)/STM32F746xG.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -113,13 +117,23 @@ CSRC = $(STARTUPSRC) \
        $(HALSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
- 		src/crc.c 
+       $(CHIBIOS)/os/various/syscalls.c \
+ 		src/crc.c
  		
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CPPSRC = $(CHCPPSRC) \
-         src/main.cpp
+         src/main.cpp \
+         src/CExPowerBox.cpp \
+         src/CExBus.cpp \
+         src/CExBusUart.cpp \
+         src/CExDevice.cpp \
+         src/CExSensor.cpp \
+         src/CGps.cpp \
+         src/CLTC2943.cpp \
+         src/CMAX6639.cpp \
+         src/CSensorAcquisition.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -158,7 +172,7 @@ INCDIR = $(CHIBIOS)/os/license \
 # Compiler settings
 #
 
-MCU  = cortex-m4
+MCU  = cortex-m7
 
 #TRGT = arm-elf-
 TRGT = arm-none-eabi-
@@ -167,8 +181,8 @@ CPPC = $(TRGT)g++
 # Enable loading with g++ only if you need C++ runtime support.
 # NOTE: You can use C++ even without C++ support if you are careful. C++
 #       runtime support makes code size explode.
-LD   = $(TRGT)gcc
-#LD   = $(TRGT)g++
+#LD   = $(TRGT)gcc
+LD   = $(TRGT)g++
 CP   = $(TRGT)objcopy
 AS   = $(TRGT)gcc -x assembler-with-cpp
 AR   = $(TRGT)ar

@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <string>
-#include "i2c.h"
 
 #define LTC2943_I2C_ADDR	0xC8
 
@@ -47,7 +46,7 @@ namespace LTC2943
 			std::uint8_t batIndex_;
 			bool isPresent_;
 			std::uint8_t i2cBuffer_[4];
-			HAL_StatusTypeDef i2cStatus_;
+			int i2cStatus_;
 	};
 }
 

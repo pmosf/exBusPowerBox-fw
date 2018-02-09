@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <string>
-#include "i2c.h"
 
 #define IIC_MAX6639_ADDR		0x5C//0x58
 
@@ -37,7 +36,7 @@ namespace MAX6639
 
 		private:
 			bool isPresent_;
-			HAL_StatusTypeDef i2cStatus_;
+			int i2cStatus_;
 			std::uint8_t i2cBuffer_[4];
 	};
 }

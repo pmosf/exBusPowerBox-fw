@@ -7,7 +7,7 @@
 #include <map>
 #include <memory>
 
-#include "CExSensor.h"
+#include "CExSensor.hpp"
 
 namespace Jeti
 {
