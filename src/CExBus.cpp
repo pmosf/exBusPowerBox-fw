@@ -1,158 +1,185 @@
+/*
+ * CExBusUart.cpp
+ *
+ *  Created on: Feb 2, 2018
+ *      Author: pperonna
+ */
+
+#include "ch.hpp"
+#include "hal.h"
 #include "CExBus.hpp"
 #include "crc.h"
 
-namespace Jeti
-{
-	namespace ExBus
-	{
-    packet_t CExBus::telemetryData_ __attribute__((aligned(4))) =
-		{ 0x3B, 0x01, 0, 0, 0x3A };
-		packet_t CExBus::telemetryText_[32] __attribute__((aligned(4)));
+namespace ExPowerBox {
 
-		CExBus::CExBus(std::string exTelemetryDeviceName) :
-				telemetryDevice_(exTelemetryDeviceName, 0xA400, 0)
-		{
-			textDescriptorIndex_ = 0;
-			dataDescriptorIndex_ = 0;
-			exTelemetryTextPacketLen_ = 0;
-			//servoValues_ = (std::uint16_t*) packet_.data;
+  CExBusUart::CExBusUart(thread_t *parent, SerialDriver *driver,
+                         const char *threadName) :
+      parentThread_(parent), driver_(driver), serialConfig_( {125000, 0,
+      USART_CR2_STOP_1,
+                                                              USART_CR3_HDSEL}), threadName_(
+          threadName) {
 
-			// create telemetry text packet for device
-			telemetryText_[0].header[0] = 0x3B;
-			telemetryText_[0].header[1] = 0x01;
-			telemetryText_[0].pktLen = 8 + telemetryDevice_.GetTextDescriptor().size() - 1; // 0x7E separator is not sent
-			telemetryText_[0].packetId = 0;
-			telemetryText_[0].dataId = 0x3A;
-			telemetryText_[0].dataLength = telemetryDevice_.GetTextDescriptor().size() - 1;
+    state_ = 0;
+    nbExPacket_ = 0;
+    nbExValidPacket_ = 0;
+    nbExInvalidPacket_ = 0;
+    isClassInitialized_ = false;
 
-			for (size_t i = 0; i < telemetryDevice_.GetTextDescriptor().size(); ++i)
-			{
-				telemetryText_[0].data[i] = telemetryDevice_.GetTextDescriptor()[i + 1]; // 0x7E separator is skipped
-			}
-		}
+    initPacket();
 
-		CExBus::~CExBus()
-		{
-		}
+    for (int i = 0; i < EX_NB_SERVOS; ++i)
+      servoPosition_[i] = 0;
+  }
 
-		std::uint16_t& CExBus::GetServoValue(int index)
-		{
-			return servoValues_[index];
-		}
+  CExBusUart::~CExBusUart() {
+    sdStop(driver_);
+  }
 
-		bool CExBus::checkHeader(packet_t& pkt)
-		{
-			if ((pkt.header[0] == 0x3E || pkt.header[0] == 0x3D) && (pkt.header[1] == 0x01 || pkt.header[1] == 0x03))
-				return JETI_EXBUS_PKT_HEADER_OK;
-			else
-				return !JETI_EXBUS_PKT_HEADER_OK;
-		}
+  chibios_rt::EvtSource& CExBusUart::getEvtServoPosition() {
+    return evtServoPosition_;
+  }
 
-		bool CExBus::checkCRC(packet_t& pkt)
-		{
-			uint16_t crc = (pkt.data[pkt.pktLen - 7] << 8) | pkt.data[pkt.pktLen - 8];
+  void CExBusUart::getServoPosition(uint16_t* dest) {
+    chSysLock();
+    for (int i = 0; i < EX_NB_SERVOS; ++i) {
+      *dest++ = servoPosition_[i];
+    }
+    chSysUnlock();
+  }
 
-			if (crc != get_crc16((uint8_t*) &pkt, pkt.pktLen - 2))
-				return !JETI_EXBUS_PKT_CRC_OK;
-			else
-				return JETI_EXBUS_PKT_CRC_OK;
-		}
+  uint16_t CExBusUart::getServoPosition(int ch) {
+    chSysLock();
+    return servoPosition_[ch];
+    chSysUnlock();
+  }
 
-		std::uint8_t* CExBus::GetExTelemetryTextPacket()
-		{
-			if (textDescriptorIndex_ > telemetryDevice_.GetSensorCollection().size())
-				textDescriptorIndex_ = 0;
+  __attribute__((noreturn))
+  void CExBusUart::main(void) {
+    setName(threadName_);
 
-			telemetryText_[textDescriptorIndex_].packetId = packet_.packetId;
+    sdStart(driver_, &serialConfig_);
 
-			uint16_t crc = get_crc16(telemetryText_[textDescriptorIndex_].header, telemetryText_[textDescriptorIndex_].pktLen - 2);
+    while (true) {
+      size_t n = chnReadTimeout((BaseChannel * )driver_, &rxData_, 1,
+                                TIME_MS2I(20));
+      // timeout
+      if (!n) {
+        initPacket();
+        // waiting for 1st packet before taking care of timeout
+        if (!nbExValidPacket_) {
+          continue;
+        }
+        signalEvents(EXBUS_TIMEOUT);
+      }
 
-			telemetryText_[textDescriptorIndex_].data[telemetryText_[textDescriptorIndex_].dataLength] = crc;
+      if (exDecode(rxData_)) {
+        nbExPacket_++;
 
-			telemetryText_[textDescriptorIndex_].data[telemetryText_[textDescriptorIndex_].dataLength + 1] = crc >> 8;
+        if (checkCRC() == JETI_EXBUS_PKT_CRC_OK) {
+          nbExValidPacket_++;
 
-			exTelemetryTextPacketLen_ = telemetryText_[textDescriptorIndex_].pktLen;
+          if (exPacket_.dataId == JETI_EX_ID_CHANNEL) {
+            uint8_t *p = exPacket_.data;
 
-			return telemetryText_[textDescriptorIndex_++].header;
-		}
+            chSysLock();
+            for (int i = 0; i < EX_NB_SERVOS; ++i) {
+              servoPosition_[i] = *(uint16_t*)p;
+              p += 2;
+            }
+            chSysUnlock();
 
-		std::uint8_t CExBus::GetExTelemetryTextPacketSize()
-		{
-			return exTelemetryTextPacketLen_;
-		}
+            signalEvents(EXBUS_SERVO_POSITIONS);
+            continue;
+          }
+          else if (exPacket_.dataId == JETI_EX_ID_TELEMETRY) {
+            signalEvents(EXBUS_TELEMETRY);
+            continue;
+          }
+          else if (exPacket_.dataId == JETI_EX_ID_JETIBOX) {
+            signalEvents(EXBUS_JETIBOX);
+            continue;
+          }
+        }
 
-		std::uint8_t* CExBus::GetExTelemetryDataPacket()
-		{
-			if (dataDescriptorIndex_ >= telemetryDevice_.GetDataDescriptor().size())
-				dataDescriptorIndex_ = 0;
+        signalEvents(EXBUS_CRC_ERR);
+        nbExInvalidPacket_++;
+        initPacket();
+      }
+    }
+  }
 
-			std::vector<std::uint8_t>& currentDesc = telemetryDevice_.GetDataDescriptor()[dataDescriptorIndex_++];
+  bool CExBusUart::exDecode(int8_t data) {
+    switch (state_) {
+    // header
+    case 0:
+      if (data == 0x3E || data == 0x3D) {
+        exPacket_.header[0] = data;
+        state_++;
+      }
+      break;
 
-			currentDesc[currentDesc.size() - 1] = get_crc8(&(currentDesc[2]), currentDesc.size() - 3);
+      // header
+    case 1:
+      if (data == 0x01 || data == 0x03) {
+        exPacket_.header[1] = data;
+        state_++;
+      }
+      else
+        state_ = 0;
+      break;
 
-			telemetryData_.packetId = packet_.packetId;
-			telemetryData_.pktLen = 8 + currentDesc.size() - 1;
-			telemetryData_.dataLength = currentDesc.size() - 1;
+      // packet length
+    case 3:
+      exPacket_.pktLen = data;
+      state_++;
+      break;
 
-			for (size_t i = 0; i < currentDesc.size() - 1; ++i)
-			{
-				telemetryData_.data[i] = currentDesc[i + 1]; // 0x7E separator is skipped
-			}
+      // packet ID
+    case 4:
+      exPacket_.packetId = data;
+      state_++;
+      break;
 
-			uint16_t crc = get_crc16((std::uint8_t*) &telemetryData_, telemetryData_.pktLen - 2);
-			telemetryData_.data[telemetryData_.dataLength] = crc;
-			telemetryData_.data[telemetryData_.dataLength + 1] = crc >> 8;
+      // data ID
+    case 5:
+      exPacket_.dataId = data;
+      state_++;
+      break;
 
-			return telemetryData_.header;
-		}
+      // data length
+    case 6:
+      exPacket_.dataLength = data;
+      state_++;
+      break;
 
-		std::uint8_t CExBus::GetExTelemetryDataPacketSize()
-		{
-			return telemetryData_.pktLen;
-		}
+      // data
+    default:
+      exPacket_.data[state_ - 6] = rxData_;
+      state_++;
+      if (state_ == exPacket_.pktLen) {
+        return true;
+      }
+      break;
+    }
 
-		Device::CExDevice& CExBus::GetTelemetryDevice()
-		{
-			return telemetryDevice_;
-		}
+    return false;
+  }
 
-		void CExBus::AddTelemetryVoltage(std::string name, bool last)
-		{
-			telemetryDevice_.AddVoltageSensor(name, last);
-			AddTelemetryText();
-		}
+  bool CExBusUart::checkCRC() {
+    uint16_t crc = (exPacket_.data[exPacket_.pktLen - 7] << 8)
+        | exPacket_.data[exPacket_.pktLen - 8];
 
-		void CExBus::AddTelemetryCurrent(std::string name, bool last)
-		{
-			telemetryDevice_.AddCurrentSensor(name, "A", last);
-			AddTelemetryText();
-		}
+    if (crc != get_crc16((uint8_t*)&exPacket_, exPacket_.pktLen - 2))
+      return !JETI_EXBUS_PKT_CRC_OK;
+    else
+      return JETI_EXBUS_PKT_CRC_OK;
+  }
 
-		void CExBus::AddTelemetryCurrent(std::string name, std::string unit, bool last)
-		{
-			telemetryDevice_.AddCurrentSensor(name, unit, last);
-			AddTelemetryText();
-		}
+  void CExBusUart::initPacket() {
+    int8_t *p = (int8_t*)&exPacket_;
 
-		void CExBus::AddTelemetryTemperature(std::string name, bool last)
-		{
-			telemetryDevice_.AddTemperatureSensor(name, last);
-			AddTelemetryText();
-		}
-
-		void CExBus::AddTelemetryText()
-		{
-			telemetryText_[telemetryDevice_.GetSensorCollection().size()].header[0] = 0x3B;
-			telemetryText_[telemetryDevice_.GetSensorCollection().size()].header[1] = 0x01;
-			telemetryText_[telemetryDevice_.GetSensorCollection().size()].dataId = 0x3A;
-
-			telemetryText_[telemetryDevice_.GetSensorCollection().size()].pktLen = 8 + telemetryDevice_.GetSensorCollection().back().get()->GetTextDescriptor().size()
-					- 1; // 0x7F separator is not sent
-			telemetryText_[telemetryDevice_.GetSensorCollection().size()].dataLength = telemetryDevice_.GetSensorCollection().back().get()->GetTextDescriptor().size()
-					- 1;
-
-			for (int i = 0; i < telemetryText_[telemetryDevice_.GetSensorCollection().size()].dataLength; ++i)
-				telemetryText_[telemetryDevice_.GetSensorCollection().size()].data[i] = telemetryDevice_.GetSensorCollection().back().get()->GetTextDescriptor()[i + 1];
-		}
-	}
-}
+    for (int i = 0; i < 4; ++i) {
+      *p++ = 0;
+    }
+  }
+} /* namespace ExPowerBox */

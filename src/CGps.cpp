@@ -1,412 +1,445 @@
+#include <string.h>
+#include <stdlib.h>
+
 #include "hal.h"
 #include "CGps.hpp"
 
 namespace GPS {
-  std::uint8_t CGps::frame_[128];
-  std::uint8_t CGps::frameIdx_;
-  bool CGps::isFrameStarted_;
-  bool CGps::isFrameRdy_;
 
   CGps::CGps(SerialDriver *uartDriver) :
-    serialDriver_(uartDriver), serialConfig_({9600, 0, USART_CR2_STOP_1, 0}) {
-#ifndef GPS_UBX_PROTOCOL
-    isFrameRdy_ = 0;
-    isFrameStarted_ = 0;
-    frameIdx_ = 0;
-#else
-    frame_idx_ = 0;
-    frame_started_ = 0;
-    frame_rdy_ = 0;
-#endif
+      serialDriver_(uartDriver), serialConfig_(
+          {57600, 0, USART_CR2_STOP_1 | USART_CR2_LINEN, 0}) {
+
+    parserInit();
   }
 
   CGps::~CGps() {
   }
 
   void CGps::main() {
+    setName("GPS");
+
     sdStart(serialDriver_, &serialConfig_);
+
+    while (true) {
+      chnRead((BaseChannel * )serialDriver_, &rxData_, 1);
+      parse(rxData_);
+    }
   }
 
-  int CGps::getLatitude(uint8_t idx, gps_coordinates_t* coordinates) {
-    uint8_t i;
-
-    coordinates->degree = 0;
-    coordinates->minute = 0;
-    coordinates->hemisphere = 'N';
-#ifndef GPS_UBX_PROTOCOL
-    if (frame_[idx + 1] == ',')
-      return -1;
-
-    i = 1;
-    while (frame_[idx] != '.' && frame_[idx] != ',') {
-      if (i < 3) {
-        coordinates->degree = coordinates->degree * 10 + frame_[idx] - 48;
-      }
-      else
-        coordinates->minute = coordinates->minute * 10 + frame_[idx] - 48;
-      i++;
-      idx++;
-    }
-
-    if (frame_[idx] == ',')
-      return -1;
-
-    idx++;
-    i = 0;
-    while (i < 3 && frame_[idx] != ',') {
-      coordinates->minute = coordinates->minute * 10 + frame_[idx] - 48;
-      idx++;
-      i++;
-    }
-
-    while (frame_[idx++] != ',')
-      if (idx > 127)
-        return -1;
-
-    coordinates->hemisphere = frame_[idx];
-#else
-#endif
-    return 0;
+  void CGps::parserInit() {
+    sentenceType_ = GPS_SENTENCE_UNKNOWN;
+    valid_ = false;
+    sentenceOffset_ = termOffset_ = 0;
+    memset(term_, 0, sizeof(term_));
   }
 
-  int CGps::getLongitude(uint8_t idx, gps_coordinates_t* coordinates) {
-    uint8_t i;
-    coordinates->degree = 0;
-    coordinates->minute = 0;
-    coordinates->hemisphere = 'E';
-#ifndef GPS_UBX_PROTOCOL
-    if (frame_[idx + 1] == ',')
-      return -1;
-
-    i = 1;
-    while (frame_[idx] != '.' && frame_[idx] != ',') {
-      if (i < 4) {
-        coordinates->degree = coordinates->degree * 10 + frame_[idx] - 48;
-      }
-      else
-        coordinates->minute = coordinates->minute * 10 + frame_[idx] - 48;
-      i++;
-      idx++;
-    }
-
-    if (frame_[idx] == ',')
-      return -1;
-
-    idx++;
-    i = 0;
-    while (i < 3 && frame_[idx] != ',') {
-      coordinates->minute = coordinates->minute * 10 + frame_[idx] - 48;
-      idx++;
-      i++;
-    }
-
-    while (frame_[idx++] != ',')
-      if (idx > 127)
-        return -1;
-
-    coordinates->hemisphere = frame_[idx];
-#else
-#endif	
-    return 0;
-  }
-
-  int CGps::getAltitude(uint8_t idx, uint16_t* alt) {
-    uint8_t i;
-    uint16_t altitude = 0;
-#ifndef GPS_UBX_PROTOCOL	
-    if (frame_[idx + 1] == ',') {
-      return -1;
-    }
-
-    i = 1;
-    while (idx < 128) {
-      if (frame_[idx++] == ',')
+  bool CGps::parse(uint8_t c) {
+    switch (c) {
+      case ',':
+        // end of term
+        parseTerm();
+        sentenceOffset_++;
+        termOffset_ = 0;
+        checksum_ ^= c;
         break;
-      i++;
-    }
-    if (idx > 127)
-      return -1;
 
-    idx -= i;
-    while (i > 1) {
-      if (frame_[idx] != '.') {
-        altitude = altitude * 10 + frame_[idx] - 48;
-      }
-      idx++;
-      i--;
-    }
-#else
-#endif	
-    *alt = altitude;
-
-    return 0;
-  }
-
-  std::uint8_t CGps::getNbSat(uint8_t idx) {
-    uint8_t i;
-    uint8_t nb_sat;
-#ifndef GPS_UBX_PROTOCOL
-    if (frame_[idx] == ',') {
-      return 0;
-    }
-
-    i = 1;
-    while (idx < 128) {
-      if (frame_[idx++] == ',')
+      case '*':
+        // checksum
+        sentenceOffset_++;
+        termOffset_ = 0;
         break;
-      i++;
-    }
-    if (idx > 127)
-      return 0;
 
-    idx -= i;
-    if (i == 1) {
-      nb_sat = frame_[idx] - 48;
-    }
-    else
-      while (i--) {
-        nb_sat = nb_sat * 10 + frame_[idx++] - 48;
-      }
-#else
-#endif
-    return nb_sat;
-  }
-
-  int CGps::getSpeed(uint8_t idx, uint16_t* speed) {
-    uint16_t tmp = 0;
-#ifndef GPS_UBX_PROTOCOL
-    while (frame_[idx] != ',') {
-      if (frame_[idx] != '.') {
-        tmp = tmp * 10 + frame_[idx] - 48;
-      }
-      else {
-        tmp = tmp * 10 + frame_[idx + 1] - 48;
+      case '\r':
+      case '\n':
+        // end of sentence/term
+        parseTerm();
+        parseSentence();
+        sentenceOffset_ = termOffset_ = 0;
         break;
-      }
-      idx++;
-      if (idx > 127)
-        return -1;
-    }
-#else
-#endif	
-    *speed = tmp;
 
-    return 0;
-  }
-
-  int CGps::getInfo(gps_info_t* gps_info) {
-    uint16_t idx, i;
-#ifndef GPS_UBX_PROTOCOL
-    uint8_t longitude_idx;
-    uint8_t latitude_idx;
-    uint8_t altitude_idx;
-    uint8_t nb_sat_idx;
-    uint8_t fix_idx;
-    uint8_t speed_idx;
-#else
-#endif
-    uint8_t invalid_info = 1;
-    gps_coordinates_t gps_coordinates;
-
-    gps_info->valid = false;
-#ifndef GPS_UBX_PROTOCOL
-    if (!isFrameRdy_)
-      return -1;
-
-    i = 0;
-    idx = 0;
-
-    for (;;) {
-      // $GPGGA
-      if (frame_[1] == 'G' && frame_[2] == 'P' && frame_[3] == 'G'
-          && frame_[4] == 'G' && frame_[5] == 'A') {
-        // latitude
-        while (i != 2 && idx < 128) {
-          if (frame_[idx++] == ',')
-            i++;
-        }
-        if (idx > 127)
-          break;
-        latitude_idx = idx;
-
-        // longitude
-        while (i != 4 && idx < 128) {
-          if (frame_[idx++] == ',')
-            i++;
-        }
-        if (idx > 127)
-          break;
-        longitude_idx = idx;
-
-        // fix
-        while (i != 6 && idx < 128) {
-          if (frame_[idx++] == ',')
-            i++;
-        }
-        if (idx > 127)
-          break;
-        fix_idx = idx;
-
-        // finding number of satelites
-        while (i != 7 && idx < 128) {
-          if (frame_[idx++] == ',')
-            i++;
-        }
-        if (idx > 127)
-          break;
-        nb_sat_idx = idx;
-
-        // altitude
-        while (i != 9 && idx < 128) {
-          if (frame_[idx++] == ',')
-            i++;
-        }
-        if (idx > 127)
-          break;
-        altitude_idx = idx;
-
-        if (!getAltitude(altitude_idx, &i)) {
-          gps_info->altitude = i;
-        }
-        if (!getLatitude(latitude_idx, &gps_coordinates)) {
-          gps_info->latitude.degree = gps_coordinates.degree;
-          gps_info->latitude.hemisphere = gps_coordinates.hemisphere;
-          gps_info->latitude.minute = gps_coordinates.minute;
-        }
-        if (!getLongitude(longitude_idx, &gps_coordinates)) {
-          gps_info->longitude.degree = gps_coordinates.degree;
-          gps_info->longitude.hemisphere = gps_coordinates.hemisphere;
-          gps_info->longitude.minute = gps_coordinates.minute;
-        }
-        invalid_info = 0;
+      case '$':
+        // start of sentence
+        sentenceType_ = GPS_SENTENCE_UNKNOWN;
+        sentenceOffset_ = termOffset_ = checksum_ = 0;
+        valid_ = false;
         break;
+
+      default:
+        // Regular data
+        if (termOffset_ < sizeof(term_) - 1)
+          term_[termOffset_++] = c;
+        checksum_ ^= c;
+        break;
+    }
+
+    return valid_;
+  }
+
+  void CGps::parseTerm() {
+    // First term is always sentence type
+    if (sentenceOffset_ == 0) {
+      if (strncmp(term_, GPS_GPGGA_TERM, termOffset_) == 0) {
+        sentenceType_ = GPS_SENTENCE_GPGGA;
       }
-
-      // GPVTG
-      if (frame_[1] == 'G' && frame_[2] == 'P' && frame_[3] == 'V'
-          && frame_[4] == 'T' && frame_[5] == 'G') {
-        i = 0;
-        while (i != 7 && idx < 128) {
-          if (frame_[idx++] == ',')
-            i++;
-        }
-        if (idx > 127)
-          break;
-        speed_idx = idx;
-
-        if (!getSpeed(speed_idx, &i)) {
-          gps_info->speed = i;
-        }
-        invalid_info = 0;
+      else if (strncmp(term_, GPS_GPRMC_TERM, termOffset_) == 0) {
+        sentenceType_ = GPS_SENTENCE_GPRMC;
       }
-
-      break;
+      else if (strncmp(term_, GPS_GPGLL_TERM, termOffset_) == 0) {
+        sentenceType_ = GPS_SENTENCE_GPGLL;
+      }
+      else if (strncmp(term_, GPS_GPGSA_TERM, termOffset_) == 0) {
+        sentenceType_ = GPS_SENTENCE_GPGSA;
+      }
+      else if (strncmp(term_, GPS_GPGSV_TERM, termOffset_) == 0) {
+        sentenceType_ = GPS_SENTENCE_GPGSV;
+      }
+      else if (strncmp(term_, GPS_GPVTG_TERM, termOffset_) == 0) {
+        sentenceType_ = GPS_SENTENCE_GPVTG;
+      }
+      return;
     }
 
-    for (i = 0; i < 6; i++)
-      frame_[i] = 0;
+    // Null-terminate the term
+    if (termOffset_ < sizeof(term_))
+      term_[termOffset_] = '\0';
 
-    isFrameRdy_ = 0;
-#else
-    if (!frame_rdy || ubx_msg.class != GPS_UBX_CLASS_NAV) return -1;
-    switch (ubx_msg.id)
-    {
-      case GPS_UBX_ID_POSLLH:
-      gps_info->altitude = (uint16_t)((double)((ubx_msg.payload[19] << 24) | (ubx_msg.payload[18] << 16) | (ubx_msg.payload[17] << 8) | ubx_msg.payload[16]) / 10.0);
-      gps_info->longitude.degree = (uint16_t)((double)((ubx_msg.payload[19] << 24) | (ubx_msg.payload[18] << 16) | (ubx_msg.payload[17] << 8) | ubx_msg.payload[16]) / 10.0);
-      invalid_info = 0;
-      break;
-      case GPS_UBX_ID_SOL:
-      invalid_info = 0;
-      break;
-      case GPS_UBX_ID_VELNED:
-      gps_info->speed = (uint16_t)((double)((ubx_msg.payload[23] << 24) | (ubx_msg.payload[22] << 16) | (ubx_msg.payload[21] << 8) | ubx_msg.payload[20]) / 3600.);
-      invalid_info = 0;
-      break;
-      default: break;
+    // Other terms vary depending on sentence type
+    switch (sentenceType_) {
+      case GPS_SENTENCE_GPGGA:
+        parseGGA();
+        break;
+
+      case GPS_SENTENCE_GPRMC:
+        parseRMC();
+        break;
+
+      case GPS_SENTENCE_GPGLL:
+        parseGLL();
+        break;
+
+      case GPS_SENTENCE_GPGSA:
+        parseGSA();
+        break;
+
+      case GPS_SENTENCE_GPGSV:
+        parseGSV();
+        break;
+
+      case GPS_SENTENCE_GPVTG:
+        parseVTG();
+        break;
+
+      case GPS_SENTENCE_UNKNOWN:
+      default:
+        break;
     }
-#endif
-    gps_info->valid = !invalid_info;
-
-    return invalid_info;
-  }
-#if 0
-  void CGps::rxendCB(UARTDriver *uartp) {
-    int c = 0;
-
-    (void)uartp;
-
-    if ((frameIdx_ > 127) || isFrameRdy_) {
-      isFrameStarted_ = 0;
-      frameIdx_ = 0;
-      goto _exit;
-    }
-#ifndef GPS_UBX_PROTOCOL
-    if (c == '$') {
-      frame_[frameIdx_++] = '$';
-      isFrameStarted_ = 1;
-      goto _exit;
-    }
-
-    if (!isFrameStarted_)
-      goto _exit;
-
-    if (c == '\n' || c == '\r') {
-      isFrameStarted_ = 0;
-      frameIdx_ = 0;
-      goto _exit;
-    }
-
-    frame_[frameIdx_++] = c;
-    if (c == '*') {
-      isFrameStarted_ = 0;
-      isFrameRdy_ = 1;
-      frameIdx_ = 0;
-    }
-#else
-    frame[frame_idx++] = c;
-    if (frame_idx == 2)
-    {
-      if (ubx_msg.sync[0] == GPS_UBX_SYNC1 && ubx_msg.sync[1] == GPS_UBX_SYNC2) frame_started = 1;
-      else frame_idx = 0;
-      goto exit;
-    }
-
-    if (frame_idx < 6) break;
-
-    if (frame_idx == 6)
-    {
-      ubx_msg.size = (frame[5] << 8) | frame[4];
-      goto exit;
-    }
-
-    if (frame_idx == ubx_msg.size + 2)
-    {
-      frame_started = 0;
-      frame_rdy = 1;
-      frame_idx = 0;
-    }
-#endif
-    _exit: c = 0;
   }
 
-  void CGps::txEnd1CB(UARTDriver *uartp) {
-    (void)uartp;
+  void CGps::parseGGA() {
+    switch (sentenceOffset_) {
+      case 1: // UTC
+        break;
+      case 2: // Latitude
+        gpsDataTmp_.lat = parseLatLonTerm(gpsDataTmp_.latitude.degree,
+                                          gpsDataTmp_.latitude.minute);
+        break;
+      case 3: // N or S (North or South)
+        if (strncmp(term_, "S", 1) == 0)
+          gpsDataTmp_.lat *= -1;
+        gpsDataTmp_.latitude.hemisphere = *term_;
+        break;
+      case 4: // Longitude
+        gpsDataTmp_.lon = parseLatLonTerm(gpsDataTmp_.longitude.degree,
+                                          gpsDataTmp_.longitude.minute);
+        break;
+      case 5: // E or W (East or West)
+        if (strncmp(term_, "W", 1) == 0)
+          gpsDataTmp_.lon *= -1;
+        gpsDataTmp_.longitude.hemisphere = *term_;
+        break;
+      case 6: // GPS Quality Indicator (fix type)
+        gpsDataTmp_.dataGood = (strncmp(term_, "0", 1) > 0) ? 1 : 0;
+        if (strncmp(term_, "0", 1) == 0)
+          gpsDataTmp_.fixType = 0;
+        break;
+      case 7: // Number of satellites in view
+        gpsSatTmp_.numVisible = atoi(term_);
+        break;
+      case 8: // Horizontal Dilution of precision (meters)
+        break;
+      case 9: // Antenna Altitude above/below mean-sea-level (geoid) (in meters)
+        gpsDataTmp_.altitude = atoi(term_);
+        break;
+      case 10: // Units of antenna altitude, meters
+        // Ignored, always M
+        break;
+      case 11: // Geoidal separation
+        break;
+      case 12: // Units of geoidal separation, meters
+        // Ignored, always M
+        break;
+      case 13: // Age of differential GPS data
+        break;
+      case 14: // Differential reference station ID
+        break;
+      case 15: // checksum
+        gpsDataTmp_.checksum = atoi(term_);
+        break;
+      default:
+        break;
+    }
   }
 
-  void CGps::txEnd2CB(UARTDriver *uartp) {
-    (void)uartp;
+  void CGps::parseRMC() {
+    switch (sentenceOffset_) {
+      case 1: // UTC
+        break;
+      case 2: // Status, V=Navigation receiver warning A=Valid
+        gpsDataTmp_.dataGood = (strncmp(term_, "A", 1) == 0) ? 1 : 0;
+        break;
+      case 3: // Latitude
+        break;
+      case 4: // N or S (North or South)
+        if (strncmp(term_, "S", 1) == 0)
+          gpsDataTmp_.lat *= -1;
+        break;
+      case 5: // Longitude
+        break;
+      case 6: // E or W (East or West)
+        if (strncmp(term_, "W", 1) == 0)
+          gpsDataTmp_.lon *= -1;
+        break;
+      case 7: // Speed over ground, knots
+        break;
+      case 8: // Track made good, degrees true
+        break;
+      case 9: // Date, ddmmyy
+        break;
+      case 10: // Magnetic Variation, degrees
+        // I don't appear to have this on my GPS
+        break;
+      case 11: // E or W
+        // I don't appear to have this on my GPS
+        break;
+      case 12: // FAA mode indicator (NMEA 2.3 and later)
+        break;
+      case 13: // checksum
+        gpsDataTmp_.checksum = atoi(term_);
+        break;
+      default:
+        break;
+    }
   }
 
-  void CGps::rxCharCB(UARTDriver *uartp, uint16_t c) {
-    (void)uartp;
-    (void)c;
+  void CGps::parseGLL() {
+    switch (sentenceOffset_) {
+      case 1: // Latitude
+        break;
+      case 2: // N or S (North or South)
+        if (strncmp(term_, "S", 1) == 0)
+          gpsDataTmp_.lat *= -1;
+        break;
+      case 3: // Longitude
+        break;
+      case 4: // E or W (East or West)
+        if (strncmp(term_, "W", 1) == 0)
+          gpsDataTmp_.lon *= -1;
+        break;
+      case 5: // UTC
+        break;
+      case 6: // Status A - Data Valid, V - Data Invalid
+        gpsDataTmp_.dataGood = (strncmp(term_, "A", 1) == 0) ? 1 : 0;
+        break;
+      case 7: // FAA mode indicator (NMEA 2.3 and later)
+        break;
+      case 8: // checksum
+        gpsDataTmp_.checksum = atoi(term_);
+        break;
+      default:
+        break;
+    }
   }
 
-  void CGps::rxErrCB(UARTDriver *uartp, uartflags_t e) {
-    (void)uartp;
-    (void)e;
+  void CGps::parseGSA() {
+    switch (sentenceOffset_) {
+      case 1: // Selection mode: M=Manual, forced to operate in 2D or 3D, A=Automatic, 3D/2D
+        break;
+      case 2: // Mode (1 = no fix, 2 = 2D fix, 3 = 3D fix)
+        gpsDataTmp_.dataGood = (strncmp(term_, "0", 1) > 0) ? 1 : 0;
+        gpsDataTmp_.fixType = term_[0];
+        break;
+      case 3: // ID of 1st satellite used for fix
+        gpsSatTmp_.prn[0] = atoi(term_);
+        break;
+      case 4: // ID of 2nd satellite used for fix
+        gpsSatTmp_.prn[1] = atoi(term_);
+        break;
+      case 5: // ID of 3rd satellite used for fix
+        gpsSatTmp_.prn[2] = atoi(term_);
+        break;
+      case 6: // ID of 4th satellite used for fix
+        gpsSatTmp_.prn[3] = atoi(term_);
+        break;
+      case 7: // ID of 5th satellite used for fix
+        gpsSatTmp_.prn[4] = atoi(term_);
+        break;
+      case 8: // ID of 6th satellite used for fix
+        gpsSatTmp_.prn[5] = atoi(term_);
+        break;
+      case 9: // ID of 7th satellite used for fix
+        gpsSatTmp_.prn[6] = atoi(term_);
+        break;
+      case 10: // ID of 8th satellite used for fix
+        gpsSatTmp_.prn[7] = atoi(term_);
+        break;
+      case 11: // ID of 9th satellite used for fix
+        gpsSatTmp_.prn[8] = atoi(term_);
+        break;
+      case 12: // ID of 10th satellite used for fix
+        gpsSatTmp_.prn[9] = atoi(term_);
+        break;
+      case 13: // ID of 11th satellite used for fix
+        gpsSatTmp_.prn[10] = atoi(term_);
+        break;
+      case 14: // ID of 12th satellite used for fix
+        gpsSatTmp_.prn[11] = atoi(term_);
+        break;
+      case 15: // PDOP
+        break;
+      case 16: // HDOP
+        break;
+      case 17: // VDOP
+        break;
+      case 18: // checksum
+        gpsDataTmp_.checksum = atoi(term_);
+        break;
+      default:
+        break;
+    }
   }
-#endif
+
+  void CGps::parseGSV() {
+    switch (sentenceOffset_) {
+      case 1: // total number of GSV messages to be transmitted in this group
+        break;
+      default:
+        break;
+    }
+  }
+
+  void CGps::parseVTG() {
+    switch (sentenceOffset_) {
+      case 1: // Track Degrees
+        break;
+      case 2: // T = True
+        // Ignored, always T
+        break;
+      case 3: // Track Degrees
+        break;
+      case 4: // M = Magnetic
+        // Ignored, always M
+        break;
+      case 5: // Speed Knots
+        break;
+      case 6: // N = Knots
+        // Ignored, always N
+        break;
+      case 7: // Speed Kilometers Per Hour
+        gpsDataTmp_.speed = atoi(term_);
+        break;
+      case 8: // K = Kilometers Per Hour
+        // Ignored, always K
+        break;
+      case 9: // FAA mode indicator (NMEA 2.3 and later)
+        break;
+      case 10: // checksum
+        gpsDataTmp_.checksum = atoi(term_);
+        break;
+      default:
+        break;
+    }
+  }
+
+  int32_t CGps::parseLatLonTerm(uint8_t& degree, uint32_t& minute) {
+    // Convert characters to the left of the decimal point to a number
+    unsigned long left = atol(term_);
+
+    // Extract the minutes (eg in 4533, the minutes are 33)
+    unsigned long tenk_minutes = (left % 100UL) * 10000UL;
+
+    // Move pointer to the first non-digit
+    char *p;
+    for (p = term_; isDigit(*p); ++p)
+      ;
+
+    // If we found a decimal point, extract seconds
+    if (*p == '.') {
+      unsigned long mult = 1000;
+      while (isDigit(*++p)) {
+        tenk_minutes += mult * (*p - '0'); // Add the seconds after the minutes
+        mult /= 10;
+      }
+    }
+
+    degree = left / 100;
+    minute = tenk_minutes / 6;
+
+    return (left / 100) * 100000 + tenk_minutes / 6; // Extract degrees from left (45), stick it at the front, add minutes converted
+  }
+
+  /*
+   * Convert an array of characters to a long
+   */
+  uint32_t CGps::atol(const char *str) {
+    long ret = 0;
+    while (isDigit(*str))
+      ret = 10 * ret + *str++ - '0';
+    return ret;
+  }
+
+  /*
+   * Is this character a digit from 0-9?
+   */
+  char CGps::isDigit(char c) {
+    return c >= '0' && c <= '9';
+  }
+
+  /*
+   * Parse a just-completed sentence, verify checksum, and copy working storage to public storage in a thread-safe manner
+   * Sets gps_state.valid if sentence was valid and copied to public storage
+   */
+  bool CGps::parseSentence() {
+    if (gpsDataTmp_.checksum != checksum_) {
+      gpsDataTmp_.valid = false;
+      gpsData_.mtx.lock();
+      gpsData_.valid = false;
+      gpsData_.mtx.unlock();
+      return false;
+    }
+
+    gpsDataTmp_.valid = true;
+
+    switch (sentenceType_) {
+      case GPS_SENTENCE_GPGGA:
+        gpsData_.mtx.lock();
+        memcpy(&gpsData_, &gpsDataTmp_, sizeof(gps_data_t));
+        gpsData_.mtx.unlock();
+        break;
+      case GPS_SENTENCE_GPRMC:
+        break;
+      case GPS_SENTENCE_GPGLL:
+        break;
+      case GPS_SENTENCE_GPGSA:
+        break;
+      case GPS_SENTENCE_GPGSV:
+        break;
+      case GPS_SENTENCE_GPVTG:
+        break;
+      default:
+        break;
+    }
+    return true;
+  }
 }
 

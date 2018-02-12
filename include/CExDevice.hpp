@@ -1,70 +1,61 @@
-#ifndef __EXDEVICE_H
-#define __EXDEVICE_H
+#pragma once
 
-#include <cstdint>
-#include <vector>
-#include <string>
 #include <map>
-#include <memory>
+#include <array>
+#include <string>
 
 #include "CExSensor.hpp"
 
-namespace Jeti
-{
-	namespace Device
-	{
-		typedef struct
-		{
-			std::uint8_t header[2];
-			std::uint8_t lengthType;
-			std::uint8_t sn[4];
-			std::uint8_t rsvd;
-			std::uint8_t data[29];
-		} dataPacket_t;
-		
-		class CExDevice
-		{
-			public:
-				CExDevice(std::string name, std::uint16_t manufacturerId, std::uint16_t deviceId);
-				~CExDevice();
-				
-				const std::vector<std::uint8_t>& GetTextDescriptor();
-				const std::vector<std::uint8_t>& GetDataDescriptor(int index);
-				std::vector<std::vector<std::uint8_t>>& GetDataDescriptor();
-				std::vector<std::shared_ptr<Sensor::CExSensor>>& GetSensorCollection();
-				
-				void AddSensor(std::string name,  std::string unit, Sensor::Type type);
-				void AddVoltageSensor(std::string name, bool last);
-				void AddCurrentSensor(std::string name, std::string unit, bool last);
-				void AddCapacitySensor(std::string name, bool last);
-				void AddGpsSensor(std::string name, bool last);
-				void AddFuelSensor(std::string name, bool last);
-				void AddTemperatureSensor(std::string name, bool last);
-				void AddRpmSensor(std::string name, bool last);
-				
-				Sensor::CExSensor* GetSensor(int index);
-				Sensor::CExSensor* GetSensor(std::string name);
-				
-				void SetSensorValue(int index, float value);
-				void SetSensorValue(int index, std::int32_t value);
-				void SetSensorValue(int index, std::int16_t value);
-				void SetSensorValue(int index, std::int8_t value);
-				void SetGPSPosition();
-			
-			private:
-				void AddDataVector(bool updateCRC);
-				void AddDescLengthCRC();
-				std::uint16_t manufacturerId_;
-				std::uint16_t deviceId_;
-				std::vector<std::uint8_t> text_;
-				std::vector<std::vector<std::uint8_t>> data_;
-				std::vector<std::shared_ptr<Sensor::CExSensor>> sensorCollection_;
-				std::map<std::string, Sensor::CExSensor*> sensorMap_;
-				std::uint8_t sensorId_;
-				std::uint8_t dataDescriptorIndex_;
-				std::uint8_t dataIndex_;
-		};
-	}
-}
+#define EX_NB_SENSORS       9
+#define EX_MAX_NB_SENSORS   31
+#define EX_MAX_PKT_LEN      31
+#define EX_TYPE_ID_SIZE     2
 
-#endif
+namespace Jeti {
+  namespace Device {
+    typedef struct {
+        uint8_t header[2];
+        uint8_t lengthType;
+        uint8_t sn[4];
+        uint8_t rsvd;
+        uint8_t data[29];
+    } dataPacket_t;
+
+    class CExDevice {
+      public:
+        CExDevice();
+        ~CExDevice();
+
+        const std::array<uint8_t, EX_MAX_PKT_LEN>& GetTextDescriptor();
+        const std::array<uint8_t, EX_MAX_PKT_LEN>& GetDataDescriptor(int index);
+        std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& GetDataDescriptor();
+        const std::array<Sensor::CExSensor, EX_NB_SENSORS>& getSensorCollection();
+        const Sensor::CExSensor* getSensor(int index);
+        const Sensor::CExSensor* getSensor(const std::string& name);
+
+        void SetSensorValue(int index, float value);
+        void SetSensorValue(int index, int32_t value);
+        void SetSensorValue(int index, int16_t value);
+        void SetSensorValue(int index, int8_t value);
+        void SetGPSPosition();
+
+      private:
+        void AddDataVector(bool updateCRC);
+        void AddDescLengthCRC();
+        void initDataDesc();
+
+        const static std::string deviceName_;
+        const static uint16_t manufacturerId_;
+        const static uint16_t deviceId_;
+        static std::array<Sensor::CExSensor, EX_NB_SENSORS> sensorCollection_;
+        static std::map<const char*, const Sensor::CExSensor*> sensorMap_;
+        std::array<uint8_t, EX_MAX_PKT_LEN> textPkt_;
+        uint8_t textPktLen_;
+        std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS> dataPkt_;
+        uint8_t dataPktIndex_;
+        uint8_t dataIndex_;
+        std::array<uint8_t, EX_MAX_NB_SENSORS> dataPktLen_;
+        uint8_t sensorCollectionIndex_;
+    };
+  }
+}

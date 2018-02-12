@@ -1,211 +1,269 @@
+#include <string>
+
+#include "ch.hpp"
 #include "CExSensor.hpp"
 #include "crc.h"
 
-namespace Jeti
-{
-	namespace Sensor
-	{
-		CExSensor::CExSensor()
-		{
-		}
+namespace Jeti {
+  namespace Sensor {
+    CExSensor::CExSensor() {
 
-		CExSensor::CExSensor(std::uint16_t manufacturerId, std::uint16_t deviceId, std::uint8_t id, std::string name, std::string unit, Type type)
-		{
-			// prepare text descriptor
-			text_.reserve(11 + name.length() + unit.length());
-			text_.push_back(JETI_SENSOR_HEADER);
-			text_.push_back(JETI_SENSOR_EX_ID);
-			text_.push_back(
-			JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + name.length() + unit.length()));
-			text_.push_back(manufacturerId);
-			text_.push_back(manufacturerId >> 8);
-			text_.push_back(deviceId);
-			text_.push_back(deviceId >> 8);
-			text_.push_back(0); // reserved
-			text_.push_back(id); // sensor ID
-			text_.push_back((name.length() << 3) + unit.length());
-			for (size_t i = 0; i < name.length(); ++i)
-			{
-				text_.push_back(name.c_str()[i]);
-			}
-			for (size_t i = 0; i < unit.length(); ++i)
-			{
-				text_.push_back(unit.c_str()[i]);
-			}
-			text_.push_back(get_crc8(&text_[2], text_.size() - 2));
-		}
+    }
 
-		CExSensor::~CExSensor()
-		{
-		}
+    CExSensor::CExSensor(uint16_t manufacturerId, uint16_t deviceId, uint8_t id,
+                         std::string name, std::string unit, Type type,
+                         DataType dataType) :
+        id_(id), name_(name), type_(type), dataType_(dataType) {
+      // prepare text descriptor
+      int idx = 0;
+      text_[idx++] = JETI_SENSOR_HEADER;
+      text_[idx++] = JETI_SENSOR_EX_ID;
+      text_[idx++] = JETI_SENSOR_PKT_TXT_TYPE
+          | (JETI_SENSOR_TXT_LEN + name.size() + unit.size());
+      text_[idx++] = manufacturerId;
+      text_[idx++] = manufacturerId >> 8;
+      text_[idx++] = deviceId;
+      text_[idx++] = deviceId >> 8;
+      text_[idx++] = 0; // reserved
+      text_[idx++] = id_; // sensor ID
+      text_[idx++] = (name.size() << 3) + unit.size();
+      for (size_t i = 0; i < name.size(); ++i) {
+        text_[idx++] = name.c_str()[i];
+      }
+      for (size_t i = 0; i < unit.size(); ++i) {
+        text_[idx++] = unit.c_str()[i];
+      }
 
-		std::vector<std::uint8_t>& CExSensor::GetTextDescriptor()
-		{
-			return text_;
-		}
+      text_[idx] = get_crc8(&text_[2], idx - 2);
 
-		void CExSensor::SetValue(float val)
-		{
-		}
+      textLen_ = idx + 1;
 
-		void CExSensor::SetValue(std::int8_t val)
-		{
-		}
+      // variable initialization
+      formattedValue_[0] = 0;
+      formattedValue_[1] = 0x60;
+    }
 
-		void CExSensor::SetValue(std::int16_t val)
-		{
-		}
+    CExSensor::~CExSensor() {
+    }
 
-		void CExSensor::SetValue(std::int32_t val)
-		{
-		}
+    std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE>& CExSensor::getTextDescriptor() {
+      return text_;
+    }
 
-		void CExSensor::SetGpsValue(gps_t *val)
-		{
-		}
+    uint8_t& CExSensor::getTextDescLen() {
+      return textLen_;
+    }
 
-		CExVoltageSensor::CExVoltageSensor(std::uint16_t manufacturerId, std::uint16_t deviceId, std::uint8_t id, std::string name, std::uint8_t* formattedData) :
-				CExSensor(manufacturerId, deviceId, id, name, "V", Type::int14)
-		{
-			formattedValue_ = formattedData;
-			formattedValue_[0] = 0;
-			formattedValue_[1] = 0x60;
-		}
+    const uint8_t& CExSensor::getId() const {
+      return id_;
+    }
 
-		void CExVoltageSensor::SetValue(float val)
-		{
-			std::int16_t formattedValue;
+    const DataType& CExSensor::getDataType() const {
+      return dataType_;
+    }
 
-			if (val < 8.0)
-			{
-				formattedValue = (uint16_t) (val * 1000.0);
-				formattedValue |= 0x6000;
-			}
-			else
-			{
-				formattedValue = (uint16_t) (val * 100.0);
-				formattedValue |= 0x4000;
-			}
+    const std::string& CExSensor::getName() const {
+      return name_;
+    }
 
-			formattedValue_[0] = formattedValue;
-			formattedValue_[1] = formattedValue >> 8;
-		}
+    void CExSensor::setFormattedValuePtr(uint8_t *p) {
+      chSysLock();
+      formattedValue_ = p;
+      chSysUnlock();
+    }
 
-		CExCurrentSensor::CExCurrentSensor(std::uint16_t manufacturerId, std::uint16_t deviceId, std::uint8_t id, std::string name, std::string unit,
-				std::uint8_t* formattedData) :
-				CExSensor(manufacturerId, deviceId, id, name, unit, Type::int14)
-		{
-			formattedValue_ = formattedData;
-			formattedValue_[0] = 0;
-			formattedValue_[1] = 0x60;
-		}
+    int CExSensor::getFormattedValueSize() {
+      return formattedValueSize_;
+    }
 
-		void CExCurrentSensor::SetValue(float val)
-		{
-			std::int16_t formattedValue;
+    void CExSensor::setValue(float val) {
+      uint16_t formattedValue = 0;
+      switch (type_) {
+        case Type::voltage:
+          break;
+        case Type::current:
+          if (val < 8.0) {
+            formattedValue = (uint16_t)(val * 1000.0);
+            formattedValue |= 0x6000;
+          }
+          else if (val < 80.0) {
+            formattedValue = (uint16_t)(val * 100.0);
+            formattedValue |= 0x4000;
+          }
+          else {
+            formattedValue = (uint16_t)(val * 1000.0);
+            formattedValue |= 0x2000;
+          }
+          break;
+        case Type::temperature:
+          formattedValue = static_cast<int16_t>(val * 10.0);
+          if (val < 0.0) {
+            formattedValue |= 0x8000;
+          }
+          formattedValue |= 0x2000;
+          break;
+        default:
+          break;
+      }
+      //chibios_rt::BaseThread
+      chSysLock();
+      formattedValue_[0] = formattedValue;
+      formattedValue_[1] = formattedValue >> 8;
+      chSysUnlock();
+    }
 
-			if (val < 8.0)
-			{
-				formattedValue = (uint16_t) (val * 1000.0);
-				formattedValue |= 0x6000;
-			}
-			else if (val < 80.0)
-			{
-				formattedValue = (uint16_t) (val * 100.0);
-				formattedValue |= 0x4000;
-			}
-			else
-			{
-				formattedValue = (uint16_t) (val * 1000.0);
-				formattedValue |= 0x2000;
-			}
+    void CExSensor::setValue(int8_t val) {
+      (void)val;
+    }
 
-			formattedValue_[0] = formattedValue;
-			formattedValue_[1] = formattedValue >> 8;
-		}
+    void CExSensor::setValue(int16_t val) {
+      (void)val;
+    }
 
-		CExTemperatureSensor::CExTemperatureSensor(std::uint16_t manufacturerId, std::uint16_t deviceId, std::uint8_t id, std::string name, std::uint8_t* formattedData) :
-				CExSensor(manufacturerId, deviceId, id, name, "°C", Type::int14)
-		{
-			formattedValue_ = formattedData;
-			formattedValue_[0] = 0;
-			formattedValue_[1] = 0x60;
-		}
+    void CExSensor::setValue(int32_t val) {
+      (void)val;
+    }
 
-		void CExTemperatureSensor::SetValue(float val)
-		{
-			std::int16_t formattedValue;
+    CExVoltageSensor::CExVoltageSensor(uint16_t manufacturerId,
+                                       uint16_t deviceId, uint8_t id,
+                                       const std::string name) :
+        CExSensor(manufacturerId, deviceId, id, name, "V",
+                  Sensor::Type::voltage, Sensor::DataType::int14) {
+      formattedValueSize_ = 2;
+    }
 
-			formattedValue = static_cast<std::int16_t>(val * 10.0);
+    void CExVoltageSensor::setValue(float val) {
+      int16_t formattedValue = 0x6000;
 
-			if (val < 0.0)
-			{
-				formattedValue |= 0x8000;
-			}
+      if (val < 8.0) {
+        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue |= 0x6000;
+      }
+      else {
+        formattedValue = (uint16_t)(val * 100.0);
+        formattedValue |= 0x4000;
+      }
+      chSysLock();
+      formattedValue_[0] = formattedValue;
+      formattedValue_[1] = formattedValue >> 8;
+      chSysUnlock();
+    }
 
-			formattedValue |= 0x2000;
+    CExCurrentSensor::CExCurrentSensor(uint16_t manufacturerId,
+                                       uint16_t deviceId, uint8_t id,
+                                       const std::string name) :
+        CExSensor(manufacturerId, deviceId, id, name, "A",
+                  Sensor::Type::current, Sensor::DataType::int14) {
+      formattedValueSize_ = 2;
+    }
 
-			formattedValue_[0] = formattedValue;
-			formattedValue_[1] = formattedValue >> 8;
-		}
+    void CExCurrentSensor::setValue(float val) {
+      int16_t formattedValue = 0x6000;
 
-		CExGPS::CExGPS(std::uint16_t manufacturerId, std::uint16_t deviceId, std::uint8_t id)
-		{
-			std::string s[3] = {"Longitude", "Lattitude", "GSpeed"};
+      if (val < 8.0) {
+        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue |= 0x6000;
+      }
+      else if (val < 80.0) {
+        formattedValue = (uint16_t)(val * 100.0);
+        formattedValue |= 0x4000;
+      }
+      else {
+        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue |= 0x2000;
+      }
 
-			// prepare text descriptor
-			text_.reserve(11 * 3 + s[0].length() + s[1].length() + s[2].length());
+      chSysLock();
+      formattedValue_[0] = formattedValue;
+      formattedValue_[1] = formattedValue >> 8;
+      chSysUnlock();
+    }
 
-			text_.push_back(JETI_SENSOR_HEADER);
-			text_.push_back(JETI_SENSOR_EX_ID);
-			text_.push_back(
-			JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + s[0].length()));
-			text_.push_back(manufacturerId);
-			text_.push_back(manufacturerId >> 8);
-			text_.push_back(deviceId);
-			text_.push_back(deviceId >> 8);
-			text_.push_back(0); // reserved
-			text_.push_back(id++); // sensor ID
-			text_.push_back(s[0].length() << 3);
-			for (size_t i = 0; i < s[0].length(); ++i)
-			{
-				text_.push_back(s[0].c_str()[i]);
-			}
-			text_.push_back(get_crc8(&text_[2], text_.size() - 2));
+    CExTemperatureSensor::CExTemperatureSensor(uint16_t manufacturerId,
+                                               uint16_t deviceId, uint8_t id,
+                                               const std::string name) :
+        CExSensor(manufacturerId, deviceId, id, name, "°C",
+                  Sensor::Type::temperature, Sensor::DataType::int14) {
+      formattedValueSize_ = 2;
+    }
 
-			text_.push_back(JETI_SENSOR_HEADER);
-			text_.push_back(JETI_SENSOR_EX_ID);
-			text_.push_back(
-			JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + s[1].length()));
-			text_.push_back(manufacturerId);
-			text_.push_back(manufacturerId >> 8);
-			text_.push_back(deviceId);
-			text_.push_back(deviceId >> 8);
-			text_.push_back(0); // reserved
-			text_.push_back(id++); // sensor ID
-			text_.push_back(s[1].length() << 3);
-			for (size_t i = 0; i < s[1].length(); ++i)
-			{
-				text_.push_back(s[1].c_str()[i]);
-			}
-			text_.push_back(get_crc8(&text_[2], text_.size() - 2));
+    void CExTemperatureSensor::setValue(float val) {
+      int16_t formattedValue;
 
-			text_.push_back(JETI_SENSOR_HEADER);
-			text_.push_back(JETI_SENSOR_EX_ID);
-			text_.push_back(
-			JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + s[2].length()));
-			text_.push_back(manufacturerId);
-			text_.push_back(manufacturerId >> 8);
-			text_.push_back(deviceId);
-			text_.push_back(deviceId >> 8);
-			text_.push_back(0); // reserved
-			text_.push_back(id++); // sensor ID
-			text_.push_back(s[2].length() << 3);
-			for (size_t i = 0; i < s[2].length(); ++i)
-			{
-				text_.push_back(s[2].c_str()[i]);
-			}
-			text_.push_back(get_crc8(&text_[2], text_.size() - 2));
-		}
-	}
+      formattedValue = static_cast<std::int16_t>(val * 10.0);
+      if (val < 0.0) {
+        formattedValue |= 0x8000;
+      }
+      formattedValue |= 0x2000;
+
+      chSysLock();
+      formattedValue_[0] = formattedValue;
+      formattedValue_[1] = formattedValue >> 8;
+      chSysUnlock();
+    }
+
+    CExGPS::CExGPS(uint16_t manufacturerId, uint16_t deviceId, uint8_t id) :
+        CExSensor() {
+      const std::string s[3] = {"Longitude", "Lattitude", "GSpeed"};
+      int idx = 0;
+
+      dataType_ = DataType::gps;
+
+      text_[idx++] = JETI_SENSOR_HEADER;
+      text_[idx++] = JETI_SENSOR_EX_ID;
+      text_[idx++] = JETI_SENSOR_PKT_TXT_TYPE
+          | (JETI_SENSOR_TXT_LEN + s[0].size());
+      text_[idx++] = manufacturerId;
+      text_[idx++] = manufacturerId >> 8;
+      text_[idx++] = deviceId;
+      text_[idx++] = deviceId >> 8;
+      text_[idx++] = 0; // reserved
+      text_[idx++] = id++; // sensor ID
+      text_[idx++] = (s[0].size() << 3);
+      for (size_t i = 0; i < s[0].size(); ++i) {
+        text_[idx++] = s[0].c_str()[i];
+      }
+      text_[idx] = get_crc8(&text_[2], idx - 2);
+      idx++;
+      textLen_ = idx;
+
+      text_[idx++] = JETI_SENSOR_HEADER;
+      text_[idx++] = JETI_SENSOR_EX_ID;
+      int j = idx;
+      text_[idx++] = JETI_SENSOR_PKT_TXT_TYPE
+          | (JETI_SENSOR_TXT_LEN + s[1].size());
+      text_[idx++] = manufacturerId;
+      text_[idx++] = manufacturerId >> 8;
+      text_[idx++] = deviceId;
+      text_[idx++] = deviceId >> 8;
+      text_[idx++] = 0; // reserved
+      text_[idx++] = id++; // sensor ID
+      text_[idx++] = (s[1].size() << 3);
+      for (size_t i = 0; i < s[1].size(); ++i) {
+        text_[idx++] = s[1].c_str()[i];
+      }
+      text_[idx] = get_crc8(&text_[j], idx - j);
+      idx++;
+      textLen_ += idx;
+
+      text_[idx++] = JETI_SENSOR_HEADER;
+      text_[idx++] = JETI_SENSOR_EX_ID;
+      j = idx;
+      text_[idx++] = JETI_SENSOR_PKT_TXT_TYPE
+          | (JETI_SENSOR_TXT_LEN + s[2].size());
+      text_[idx++] = manufacturerId;
+      text_[idx++] = manufacturerId >> 8;
+      text_[idx++] = deviceId;
+      text_[idx++] = deviceId >> 8;
+      text_[idx++] = 0; // reserved
+      text_[idx++] = id++; // sensor ID
+      text_[idx++] = (s[2].size() << 3);
+      for (size_t i = 0; i < s[2].size(); ++i) {
+        text_[idx++] = s[2].c_str()[i];
+      }
+      text_[idx] = get_crc8(&text_[j], idx - j);
+      idx++;
+      textLen_ += idx;
+    }
+  }
 }

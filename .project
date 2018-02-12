@@ -79,7 +79,7 @@
 		<link>
 			<name>PP_EXBUSPOWERBOX</name>
 			<type>2</type>
-			<location>C:/ChibiStudio/chibios176/os/hal/boards/PP_EXBUSPOWERBOX</location>
+			<location>C:/ChibiStudio/chibios182/os/hal/boards/PP_EXBUSPOWERBOX</location>
 		</link>
 		<link>
 			<name>board</name>

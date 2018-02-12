@@ -13,75 +13,112 @@
 
 namespace ExPowerBox {
   CExPowerBox::CExPowerBox() :
-      exBus_("exPowerBox"), exBusUart_ {CExBusUart(this->thread_ref, &SD4,
-                                                   "exBusUart4"),
-                                        CExBusUart(this->thread_ref, &SD5,
-                                                   "exBusUart5"),
-                                        CExBusUart(this->thread_ref, &SD6,
-                                                   "exBusUart6")}, pwmDriver_ {
-          &PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
+      exDevice_(), exBus_ {CExBusUart(this->thread_ref, &SD4, "exBusUart4"),
+                           CExBusUart(this->thread_ref, &SD5, "exBusUart5"),
+                           CExBusUart(this->thread_ref, &SD6, "exBusUart6")}, sensorAcq_(
+          &SD1, &I2CD1), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
+
+    // set initial pwm frequency and period
+    updatePwmSettings(2000000UL, 20E-3);
+    // set fail-safe servo values to middle position
+    for (int i = 0; i < EX_NB_SERVOS; ++i)
+      servoFailSafePosition_[i] = 1.5E-3 * EX_PWM_FREQ;
+
+    // 1st exbus uart is selected by default
+    exBusSel_ = 0;
+    // initialize timeout counters
+    for (int i = 0; i < NB_EX_UART; ++i) {
+      nbExBusTimeout_[i] = 0;
+      nbTotalExBusTimeout_[i] = 0;
+    }
 
     initPwm();
     initPins();
-
-    for (int i = 0; i < NB_EX_UART; ++i) {
-      nbPositionTimeout_[i] = 0;
-      nbTotalPositionTimeout_[i] = 0;
-
-      chEvtRegisterMaskWithFlags(&exBusUart_[i].getEvtServoPosition(),
-                                 &exBusEvtListener_[i], EVENT_MASK(i),
-                                 EXBUS_SERVO_POSITIONS | EXBUS_TIMEOUT | EXBUS_CRC_ERR);
-
-      exBusUart_[i].start(NORMALPRIO);
-    }
-
-    /*exBus_.AddTelemetryVoltage("V Bat1", false);
-     exBus_.AddTelemetryVoltage("V Bat2", false);
-     exBus_.AddTelemetryCurrent("I Bat1", false);
-     exBus_.AddTelemetryCurrent("I Bat2", false);
-     exBus_.AddTelemetryCurrent("C Bat1", "mAh", false);
-     exBus_.AddTelemetryCurrent("C Bat2", "mAh", false);
-     exBus_.AddTelemetryTemperature("T Local", false);
-     exBus_.AddTelemetryTemperature("T Ext1", false);
-     exBus_.AddTelemetryTemperature("T Ext2", true);*/
   }
 
   CExPowerBox::~CExPowerBox() {
 
   }
 
+  __attribute__((noreturn))
   void CExPowerBox::main() {
     setName("ExPowerBox");
 
-    while (true) {
-      // Waiting for ExBus events
-      eventmask_t evt = chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(50));
+    // register exbus events and start threads
+    for (int i = 0; i < NB_EX_UART; ++i) {
+      exBus_[i].getEvtServoPosition().registerMaskWithFlags(
+          &exBusEvtListener_[i], EVENT_MASK(i),
+          EXBUS_SERVO_POSITIONS | EXBUS_TIMEOUT | EXBUS_CRC_ERR);
 
-      // timeout
+      exBus_[i].start(NORMALPRIO);
+    }
+
+    // start sensor acquisition thread
+    sensorAcq_.start(NORMALPRIO + 10);
+
+    while (true) {
+      // set servos to fail-safe positions if no activity on exbus uarts
+      if (exBusSel_ == 3) {
+        updateServoPositions(true);
+        exBusSel_ = 0;
+      }
+
+      // Waiting for ExBus events
+      eventmask_t evt = waitOneEventTimeout(
+          ((eventmask_t)1 << (eventmask_t)(exBusSel_)), TIME_MS2I(25));
+
+      // in case of 4 consecutive timeouts, we select another exbus receiver
       if (evt == 0) {
+        nbTotalExBusTimeout_[exBusSel_]++;
+        if (++nbExBusTimeout_[exBusSel_] == 4) {
+          nbExBusTimeout_[exBusSel_] = 0;
+          exBusSel_++;
+        }
         continue;
       }
 
-      evt = chEvtGetAndClearEvents(ALL_EVENTS);
+      nbExBusTimeout_[exBusSel_] = 0;
+      evt = getAndClearEvents(ALL_EVENTS);
+      eventflags_t flags = exBusEvtListener_[exBusSel_].getAndClearFlags();
 
-      // process ExBus 0
-      if (evt & EVENT_MASK(0)) {
-        eventflags_t flags = chEvtGetAndClearFlags(&exBusEvtListener_[0]);
-        if (flags & EXBUS_SERVO_POSITIONS) {
-          exBusUart_[0].getServoPosition(servoPosition_);
-          continue;
-        }
+      if (flags & EXBUS_SERVO_POSITIONS) {
+        //exBus_[exBusSel_].getServoPosition(servoPosition_);
+        updateServoPositions(false);
+        continue;
       }
     }
   }
 
-  void CExPowerBox::updateServoPositions() {
+  void CExPowerBox::updatePwmSettings(uint32_t freq, float period) {
+    pwmSettings_.freq = freq;
+    pwmSettings_.period = period;
+    pwmSettings_.periodTick = pwmSettings_.freq * pwmSettings_.period;
+    pwmSettings_.widthDivider = EX_PWM_FREQ / pwmSettings_.freq;
+  }
+
+  void CExPowerBox::updateServoPositions(bool failSafe) {
     int servoPositionIndex = 0;
 
+    // set servos to fail-safe positions
+    if (failSafe) {
+      for (int i = 0; i < NB_PWM; ++i) {
+        for (int j = 0; j < pwmDriver_[i]->channels; ++j) {
+          pwmEnableChannel(
+              pwmDriver_[i],
+              j,
+              servoFailSafePosition_[servoPositionIndex++]
+                  / pwmSettings_.widthDivider);
+        }
+      }
+      return;
+    }
+
+    // update servo with refreshed values
     for (int i = 0; i < NB_PWM; ++i) {
       for (int j = 0; j < pwmDriver_[i]->channels; ++j) {
-        pwmEnableChannel(pwmDriver_[i], j,
-                         servoPosition_[servoPositionIndex++]);
+        pwmEnableChannel(
+            pwmDriver_[i], j,
+            servoPosition_[servoPositionIndex++] / pwmSettings_.widthDivider);
       }
     }
   }
@@ -107,7 +144,7 @@ namespace ExPowerBox {
 
     palSetPadMode(GPIOB, 5, PAL_MODE_ALTERNATE(2)); // TIM3_CH3 - servo 14
     palSetPadMode(GPIOB, 6, PAL_MODE_ALTERNATE(2)); // TIM3_CH4 - servo 15
-    palSetPadMode(GPIOB, 14, PAL_MODE_ALTERNATE(9)); // TIM3_CH4 - servo 16
+    palSetPadMode(GPIOB, 14, PAL_MODE_ALTERNATE(9)); // TIM3_CH5 - servo 16
 
     // I2C1
     palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4));
@@ -134,8 +171,8 @@ namespace ExPowerBox {
 
   void CExPowerBox::initPwm() {
     for (int i = 0; i < NB_PWM; ++i) {
-    pwmConfig_[i] = {8000000, /* 8MHz PWM clock frequency */
-      20000, /* PWM period 20 milli  second */
+    pwmConfig_[i] = {pwmSettings_.freq,
+      pwmSettings_.periodTick,
       nullptr, /* No callback */
       { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
           PWM_OUTPUT_ACTIVE_HIGH,

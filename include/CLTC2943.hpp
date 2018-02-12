@@ -1,5 +1,6 @@
-#ifndef __CLTC2943_H
-#define __CLTC2943_H
+#pragma once
+
+#include "hal.h"
 
 #include <cstdint>
 #include <string>
@@ -32,9 +33,9 @@ namespace LTC2943
 	class CLTC2943
 	{
 		public:
-			CLTC2943(std::uint8_t batIndex);
+			CLTC2943(I2CDriver *i2cDriver, std::uint8_t batIndex);
 			~CLTC2943();
-			void Initialize();
+			void init();
 			void StartConv();
 			float GetCapacity();
 			float GetVoltage();
@@ -42,12 +43,13 @@ namespace LTC2943
 			float GetTemperature();
 		
 		private:
+			I2CDriver *i2cDriver_;
 			std::int16_t GetData(std::uint8_t addr);
 			std::uint8_t batIndex_;
-			bool isPresent_;
-			std::uint8_t i2cBuffer_[4];
-			int i2cStatus_;
+			bool isInitialized_;
+			std::uint8_t txBuffer_[4];
+			std::uint8_t rxBuffer_[4];
+			msg_t i2cStatus_;
+			i2cflags_t i2cErrors_;
 	};
 }
-
-#endif

@@ -15,7 +15,7 @@ endif
 
 # C++ specific options here (added to USE_OPT).
 ifeq ($(USE_CPPOPT),)
-  USE_CPPOPT = -fno-rtti -fno-non-call-exceptions -fno-exceptions -fno-threadsafe-statics
+  USE_CPPOPT = -std=c++11 -fno-rtti -fno-non-call-exceptions -fno-exceptions -fno-threadsafe-statics
 endif
 
 # Enable this if you want the linker to remove unused code and data
@@ -91,7 +91,7 @@ endif
 PROJECT = exBusPowerBox
 
 # Imported source files and paths
-CHIBIOS = ../../chibios176
+CHIBIOS = ../../chibios182
 # Startup files.
 include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f7xx.mk
 # HAL-OSAL files (optional).
@@ -127,7 +127,6 @@ CPPSRC = $(CHCPPSRC) \
          src/main.cpp \
          src/CExPowerBox.cpp \
          src/CExBus.cpp \
-         src/CExBusUart.cpp \
          src/CExDevice.cpp \
          src/CExSensor.cpp \
          src/CGps.cpp \

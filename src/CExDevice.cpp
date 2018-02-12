@@ -1,231 +1,206 @@
 #include "CExDevice.hpp"
 #include "crc.h"
 
-namespace Jeti
-{
-	namespace Device
-	{
-		CExDevice::CExDevice(std::string name, std::uint16_t manufacturerId, std::uint16_t deviceId) :
-				manufacturerId_(manufacturerId), deviceId_(deviceId)
-		{
-			sensorCollection_.reserve(32);
-			dataDescriptorIndex_ = 0;
-			dataIndex_ = 0;
+namespace Jeti {
+  namespace Device {
 
-			// prepare text descriptor
-			text_.reserve(JETI_SENSOR_TXT_LEN + name.length() + 2);
-			text_.push_back(JETI_SENSOR_HEADER);
-			text_.push_back(JETI_SENSOR_EX_ID);
-			text_.push_back(JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + name.length()));
-			text_.push_back(manufacturerId_);
-			text_.push_back(manufacturerId_ >> 8);
-			text_.push_back(deviceId_);
-			text_.push_back(deviceId_ >> 8);
-			// reserved
-			text_.push_back(0);
-			// device identifier, sensor identifiers start from 1
-			text_.push_back(0);
-			// device name length
-			text_.push_back(name.length() << 3);
-			// device name
-			for (size_t i = 0; i < name.length(); ++i)
-			{
-				text_.push_back(name.c_str()[i]);
-			}
-			// crc8, separator and ex packet id are not included
-			text_.push_back(get_crc8(&text_[2], text_.size() - 2));
+    const std::string CExDevice::deviceName_ = "exPowerBox";
+    const uint16_t CExDevice::manufacturerId_ = 0xA400;
+    const uint16_t CExDevice::deviceId_ = 0;
 
-			// first sensor ID
-			sensorId_ = 1;
+    std::array<Sensor::CExSensor, EX_NB_SENSORS> CExDevice::sensorCollection_ =
+        {Sensor::CExVoltageSensor(CExDevice::manufacturerId_,
+                                  CExDevice::deviceId_, 1, "V Bat1"),
+         Sensor::CExVoltageSensor(CExDevice::manufacturerId_,
+                                  CExDevice::deviceId_, 2, "V Bat2"),
+         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
+                                  CExDevice::deviceId_, 3, "I Bat1"),
+         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
+                                  CExDevice::deviceId_, 4, "I Bat2"),
+         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
+                                  CExDevice::deviceId_, 5, "C Bat1"),
+         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
+                                  CExDevice::deviceId_, 6, "C Bat2"),
+         Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
+                                      CExDevice::deviceId_, 7, "T Local"),
+         Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
+                                      CExDevice::deviceId_, 8, "T Ext1"),
+         Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
+                                      CExDevice::deviceId_, 9, "T Ext2")};
 
-			// reserve space for 16 descriptors
-			data_.reserve(16);
-			// create and initialize the 1st descriptor
-			AddDataVector(false);
-		}
+    std::map<const char*, const Sensor::CExSensor*> CExDevice::sensorMap_ = {
+        {"V Bat1", &sensorCollection_[0]}, {"V Bat2", &sensorCollection_[1]}, {
+            "I Bat1", &sensorCollection_[2]},
+        {"I Bat1", &sensorCollection_[3]}, {"C Bat1", &sensorCollection_[4]}, {
+            "C Bat1", &sensorCollection_[5]},
+        {"T Local", &sensorCollection_[6]}, {"T Ext1", &sensorCollection_[7]}, {
+            "T Ext2", &sensorCollection_[8]}};
 
-		CExDevice::~CExDevice()
-		{
-		}
+    CExDevice::CExDevice() {
 
-		const std::vector<std::uint8_t>& CExDevice::GetTextDescriptor()
-		{
-			return text_;
-		}
+      dataPktIndex_ = 0;
+      dataIndex_ = 0;
+      sensorCollectionIndex_ = 0;
 
-		const std::vector<std::uint8_t>& CExDevice::GetDataDescriptor(int index)
-		{
-			uint8_t* data = &(data_[index][2]);
-			data[data_[index].size() - 2] = get_crc8(data, data_[index].size() - 3);
+      // initialize device text descriptor
+      int idx = 0;
+      textPkt_[idx++] = JETI_SENSOR_HEADER;
+      textPkt_[idx++] = JETI_SENSOR_EX_ID;
+      textPkt_[idx++] =
+      JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + deviceName_.size());
+      textPkt_[idx++] = static_cast<uint8_t>(manufacturerId_);
+      textPkt_[idx++] = manufacturerId_ >> 8;
+      textPkt_[idx++] = deviceId_;
+      textPkt_[idx++] = deviceId_ >> 8;
+      // reserved
+      textPkt_[idx++] = 0;
+      // device identifier, sensor identifiers start from 1
+      textPkt_[idx++] = 0;
+      // device name length
+      textPkt_[idx++] = deviceName_.size() << 3;
+      // device name
+      for (size_t i = 0; i < deviceName_.length(); ++i) {
+        textPkt_[idx++] = deviceName_[i];
+      }
+      // crc8, separator and ex packet id are not included
+      textPkt_[idx] = get_crc8(&textPkt_[2], idx - 2);
+      textPktLen_ = idx + 1;
 
-			return data_[index];
-		}
+      // initialize data descriptor
+      initDataDesc();
+    }
 
-		std::vector<std::vector<std::uint8_t>>& CExDevice::GetDataDescriptor()
-		{
-			return data_;
-		}
+    CExDevice::~CExDevice() {
+    }
 
-		std::vector<std::shared_ptr<Sensor::CExSensor>>& CExDevice::GetSensorCollection()
-		{
-			return sensorCollection_;
-		}
+    void CExDevice::initDataDesc() {
+      dataPktIndex_ = 0;
+      dataIndex_ = 0;
+      sensorCollectionIndex_ = 0;
 
-		Sensor::CExSensor* CExDevice::GetSensor(int index)
-		{
-			return sensorCollection_[index].get();
-		}
+      AddDataVector(false);
 
-		Sensor::CExSensor* CExDevice::GetSensor(std::string name)
-		{
-			std::map<std::string, Sensor::CExSensor*>::iterator it = sensorMap_.find(name);
-			if (it != sensorMap_.end())
-				return it->second;
-			else
-				return nullptr;
-		}
+      for (auto& s : sensorCollection_) {
+        switch (s.getDataType()) {
+          // 3 bytes needed for a int6 sensor (type, id, 1 byte of formatted data)
+          case Sensor::DataType::int6:
+            dataPktIndex_ =
+                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
+                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
+                                                       dataPktIndex_;
+            AddDataVector(true);
+            break;
+            // 4 bytes needed for a int14 sensor (type, id, 2 bytes of formatted data)
+          case Sensor::DataType::int14:
+            dataPktIndex_ =
+                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
+                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
+                                                       dataPktIndex_;
+            AddDataVector(true);
+            break;
 
-		void CExDevice::AddSensor(std::string name, std::string unit, Sensor::Type type)
-		{
-			sensorCollection_.push_back(std::make_shared<Sensor::CExSensor>(Sensor::CExSensor(manufacturerId_, deviceId_, sensorId_++, name, unit, type)));
-			sensorMap_[name] = sensorCollection_.back().get();
-		}
+            // 5 bytes needed for a int22 sensor (type, id, 3 bytes of formatted data)
+          case Sensor::DataType::int22:
+            dataPktIndex_ =
+                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
+                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
+                                                       dataPktIndex_;
+            AddDataVector(true);
+            break;
 
-		void CExDevice::AddVoltageSensor(std::string name, bool last)
-		{
-			// allocate a new descriptor if necessary
-			// max packet length is 31 bytes including separator, ex packet id and crc8
-			// we need 4 bytes for a voltage sensor (type, id, 2 bytes of formatted data)
-			if (data_.back().size() + 4 > 27)
-			{
-				AddDataVector(true);
-			}
+            // 5 bytes needed for a gps sensor (type, id, 3 bytes of formatted data)
+          case Sensor::DataType::gps:
+            dataPktIndex_ =
+                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
+                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
+                                                       dataPktIndex_;
+            AddDataVector(true);
+            break;
 
-			// data type
-			data_.back().push_back(static_cast<std::uint8_t>(Sensor::Type::int14));
-			// sensor ID
-			data_.back().push_back(sensorId_);
-			// 2 bytes for formatted data
-			data_.back().push_back(0);
-			// pointer to this formatted data will be passed to the sensor object constructor
-			std::uint8_t* dataPtr = &(data_.back().back());
-			data_.back().push_back(0);
-			// if last sensor is created, we reserve space for the crc8
-			if (last)
-				AddDescLengthCRC();
+          default:
+            AddDataVector(true);
+            break;
+        }
 
-			// create the sensor
-			sensorCollection_.push_back(std::make_shared<Sensor::CExVoltageSensor>(Sensor::CExVoltageSensor(manufacturerId_, deviceId_, sensorId_++, name, dataPtr)));
-			// add pointer of created sensor to the map
-			sensorMap_[name] = sensorCollection_.back().get();
-		}
+        // data type
+        dataPkt_[dataPktIndex_][dataIndex_++] =
+            static_cast<uint8_t>(s.getDataType());
+        // sensor ID
+        dataPkt_[dataPktIndex_][dataIndex_++] = s.getId();
+        // pointer to the formatted data is passed to the sensor object
+        s.setFormattedValuePtr(&(dataPkt_[dataPktIndex_][dataIndex_]));
+        // initialize formatted data
+        for (int i = 0; i < s.getFormattedValueSize(); ++i)
+          dataPkt_[dataPktIndex_][dataIndex_++] = 0;
+      }
+      // reserve space for the crc8
+      AddDescLengthCRC();
+    }
 
-		void CExDevice::AddCurrentSensor(std::string name, std::string unit, bool last)
-		{
-			// allocate a new descriptor if necessary
-			// max packet length is 31 bytes including separator, ex packet id and crc8
-			// we need 4 bytes for a current sensor (type, id, 2 bytes of formatted data)
-			if (data_.back().size() + 4 > 27)
-			{
-				AddDataVector(true);
-			}
+    const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::GetTextDescriptor() {
+      return textPkt_;
+    }
 
-			// data type
-			data_.back().push_back(static_cast<std::uint8_t>(Sensor::Type::int14));
-			// sensor ID
-			data_.back().push_back(sensorId_);
-			// 2 bytes for formatted data
-			data_.back().push_back(0);
-			// pointer to this formatted data will be passed to the sensor object constructor
-			std::uint8_t* dataPtr = &(data_.back().back());
-			data_.back().push_back(0);
-			// if last sensor is created, we reserve space for the crc8
-			if (last)
-				AddDescLengthCRC();
+    const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::GetDataDescriptor(
+        int index) {
+      uint8_t* data = &(dataPkt_[index][2]);
+      data[dataPktLen_[index] - 2] = get_crc8(data, dataPktLen_[index] - 3);
 
-			sensorCollection_.push_back(
-					std::make_shared<Sensor::CExCurrentSensor>(Sensor::CExCurrentSensor(manufacturerId_, deviceId_, sensorId_++, name, unit, dataPtr)));
-			sensorMap_[name] = sensorCollection_.back().get();
-		}
+      return dataPkt_[index];
+    }
 
-		void CExDevice::AddCapacitySensor(std::string name, bool last)
-		{
-		}
+    std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& CExDevice::GetDataDescriptor() {
+      return dataPkt_;
+    }
 
-		void CExDevice::AddGpsSensor(std::string name, bool last)
-		{
-		}
+    const std::array<Sensor::CExSensor, EX_NB_SENSORS>& CExDevice::getSensorCollection() {
+      return sensorCollection_;
+    }
 
-		void CExDevice::AddFuelSensor(std::string name, bool last)
-		{
-		}
+    const Sensor::CExSensor* CExDevice::getSensor(int index) {
+      return &sensorCollection_[index];
+    }
 
-		void CExDevice::AddTemperatureSensor(std::string name, bool last)
-		{
-			// allocate a new descriptor if necessary
-			// max packet length is 31 bytes including separator, ex packet id and crc8
-			// we need 4 bytes for a temperature sensor (type, id, 2 bytes of formatted data)
-			if (data_.back().size() + 4 > 27)
-			{
-				AddDataVector(true);
-			}
+    const Sensor::CExSensor* CExDevice::getSensor(const std::string& name) {
+      std::map<const char*, const Sensor::CExSensor*>::iterator it =
+          sensorMap_.find(name.c_str());
+      if (it != sensorMap_.end())
+        return it->second;
+      else
+        return nullptr;
+    }
 
-			// data type
-			data_.back().push_back(static_cast<std::uint8_t>(Sensor::Type::int14));
-			// sensor ID
-			data_.back().push_back(sensorId_);
-			// 2 bytes for formatted data
-			data_.back().push_back(0);
-			// pointer to this formatted data will be passed to the sensor object constructor
-			std::uint8_t* dataPtr = &(data_.back().back());
-			data_.back().push_back(0);
-			// if last sensor is created, we reserve space for the crc8
-			if (last)
-				AddDescLengthCRC();
+    void CExDevice::AddDescLengthCRC() {
+      // length (separator and ex ID bytes are not included)
+      dataPkt_[dataPktIndex_][2] += dataPktLen_[dataPktIndex_] - 2;
+      // crc8 (separator and ex ID bytes are not included)
+      dataPkt_[dataPktIndex_][dataIndex_++] = 0;
+    }
 
-			sensorCollection_.push_back(std::make_shared<Sensor::CExTemperatureSensor>(Sensor::CExTemperatureSensor(manufacturerId_, deviceId_, sensorId_++, name, dataPtr)));
-			sensorMap_[name] = sensorCollection_.back().get();
-		}
+    void CExDevice::AddDataVector(bool updateCRC) {
+      // update vector with length and CRC
+      if (updateCRC) {
+        AddDescLengthCRC();
+      }
 
-		void CExDevice::AddRpmSensor(std::string name, bool last)
-		{
-		}
+      dataIndex_ = 0;
 
-		void CExDevice::AddDescLengthCRC()
-		{
-			// length (separator and ex ID bytes are not included)
-			data_.back()[2] += data_.back().size() - 2;
-			// crc8 (separator and ex ID bytes are not included)
-			data_.back().push_back(0/*get_crc8(&data_.back()[2], data_.back().size() - 2)*/);
-		}
-
-		void CExDevice::AddDataVector(bool updateCRC)
-		{
-			// update vector with length and CRC
-			if (updateCRC)
-			{
-				AddDescLengthCRC();
-			}
-
-			// create new vector
-			data_.push_back(std::vector<std::uint8_t>());
-
-			// setup data descriptor
-			// message separator
-			data_.back().reserve(31);
-			data_.back().push_back(JETI_SENSOR_HEADER);
-			// EX packet identifier
-			data_.back().push_back(JETI_SENSOR_EX_ID);
-			// data packet type, length of the packet is still unknown
-			data_.back().push_back(JETI_SENSOR_PKT_DATA_TYPE);
-			// manufacturer ID, little endian
-			data_.back().push_back(manufacturerId_);
-			data_.back().push_back(manufacturerId_ >> 8);
-			// device ID, little endian
-			data_.back().push_back(deviceId_);
-			data_.back().push_back(deviceId_ >> 8);
-			// reserved
-			data_.back().push_back(0);
-		}
-	}
+      // setup data descriptor
+      // message separator
+      dataPkt_[dataPktIndex_][dataIndex_++] = JETI_SENSOR_HEADER;
+      // EX packet identifier
+      dataPkt_[dataPktIndex_][dataIndex_++] = JETI_SENSOR_EX_ID;
+      // data packet type, length of the packet is still unknown
+      dataPkt_[dataPktIndex_][dataIndex_++] = JETI_SENSOR_PKT_DATA_TYPE;
+      // manufacturer ID, little endian
+      dataPkt_[dataPktIndex_][dataIndex_++] =
+          static_cast<uint8_t>(manufacturerId_);
+      dataPkt_[dataPktIndex_][dataIndex_++] = manufacturerId_ >> 8;
+      // device ID, little endian
+      dataPkt_[dataPktIndex_][dataIndex_++] = deviceId_;
+      dataPkt_[dataPktIndex_][dataIndex_++] = deviceId_ >> 8;
+      // reserved
+      dataPkt_[dataPktIndex_][dataIndex_++] = 0;
+    }
+  }
 }
