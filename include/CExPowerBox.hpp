@@ -46,7 +46,6 @@ namespace ExPowerBox {
       void updateServoPositions(bool failSafe);
       void updatePwmSettings(uint32_t freq, float period);
 
-      Jeti::Device::CExDevice exDevice_;
       CExBusUart exBus_[NB_EX_UART];
       CSensorAcquisition sensorAcq_;
       chibios_rt::EvtListener exBusEvtListener_[NB_EX_UART];

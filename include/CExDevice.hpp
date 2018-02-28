@@ -26,10 +26,11 @@ namespace Jeti {
         CExDevice();
         ~CExDevice();
 
-        const std::array<uint8_t, EX_MAX_PKT_LEN>& GetTextDescriptor();
-        const std::array<uint8_t, EX_MAX_PKT_LEN>& GetDataDescriptor(int index);
-        std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& GetDataDescriptor();
-        const std::array<Sensor::CExSensor, EX_NB_SENSORS>& getSensorCollection();
+        const std::array<uint8_t, EX_MAX_PKT_LEN>& getTextDescriptor();
+        uint8_t getTextDescriptorSize();
+        const std::array<uint8_t, EX_MAX_PKT_LEN>& getDataDescriptor(int index);
+        std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& getDataDescriptor();
+        std::array<Sensor::CExSensor, EX_NB_SENSORS>& getSensorCollection();
         const Sensor::CExSensor* getSensor(int index);
         const Sensor::CExSensor* getSensor(const std::string& name);
 
@@ -49,8 +50,8 @@ namespace Jeti {
         const static uint16_t deviceId_;
         static std::array<Sensor::CExSensor, EX_NB_SENSORS> sensorCollection_;
         static std::map<const char*, const Sensor::CExSensor*> sensorMap_;
-        std::array<uint8_t, EX_MAX_PKT_LEN> textPkt_;
-        uint8_t textPktLen_;
+        std::array<uint8_t, EX_MAX_PKT_LEN> textDesc_;
+        uint8_t textDescSize_;
         std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS> dataPkt_;
         uint8_t dataPktIndex_;
         uint8_t dataIndex_;

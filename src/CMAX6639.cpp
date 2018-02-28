@@ -124,5 +124,6 @@ namespace MAX6639 {
   std::uint16_t CMAX6639::GetRpm(void) {
     if (!isPresent_)
       return 0;
+    return 0;
   }
 }

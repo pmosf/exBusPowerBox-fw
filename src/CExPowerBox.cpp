@@ -13,7 +13,7 @@
 
 namespace ExPowerBox {
   CExPowerBox::CExPowerBox() :
-      exDevice_(), exBus_ {CExBusUart(this->thread_ref, &SD4, "exBusUart4"),
+      exBus_ {CExBusUart(this->thread_ref, &SD4, "exBusUart4"),
                            CExBusUart(this->thread_ref, &SD5, "exBusUart5"),
                            CExBusUart(this->thread_ref, &SD6, "exBusUart6")}, sensorAcq_(
           &SD1, &I2CD1), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
@@ -82,8 +82,16 @@ namespace ExPowerBox {
       eventflags_t flags = exBusEvtListener_[exBusSel_].getAndClearFlags();
 
       if (flags & EXBUS_SERVO_POSITIONS) {
-        //exBus_[exBusSel_].getServoPosition(servoPosition_);
+        exBus_[exBusSel_].getServoPosition(&servoPosition_[0]);
         updateServoPositions(false);
+        continue;
+      }
+
+      if (flags & EXBUS_TELEMETRY) {
+        continue;
+      }
+
+      if (flags & EXBUS_JETIBOX) {
         continue;
       }
     }

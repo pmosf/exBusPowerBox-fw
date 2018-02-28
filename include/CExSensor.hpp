@@ -77,7 +77,7 @@ namespace Jeti {
                   DataType dataType);
         virtual ~CExSensor();
         std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE>& getTextDescriptor();
-        uint8_t& getTextDescLen();
+        uint8_t& getTextDescriptorSize();
         const uint8_t& getId() const;
         const DataType& getDataType() const;
         const std::string& getName() const;
@@ -94,7 +94,7 @@ namespace Jeti {
         Type type_;
         DataType dataType_;
         std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE> text_;
-        uint8_t textLen_;
+        uint8_t textDescSize_;
         uint8_t *formattedValue_;
         int formattedValueSize_;
         int precision_;

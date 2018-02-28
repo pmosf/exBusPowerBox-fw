@@ -44,27 +44,27 @@ namespace Jeti {
 
       // initialize device text descriptor
       int idx = 0;
-      textPkt_[idx++] = JETI_SENSOR_HEADER;
-      textPkt_[idx++] = JETI_SENSOR_EX_ID;
-      textPkt_[idx++] =
+      textDesc_[idx++] = JETI_SENSOR_HEADER;
+      textDesc_[idx++] = JETI_SENSOR_EX_ID;
+      textDesc_[idx++] =
       JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + deviceName_.size());
-      textPkt_[idx++] = static_cast<uint8_t>(manufacturerId_);
-      textPkt_[idx++] = manufacturerId_ >> 8;
-      textPkt_[idx++] = deviceId_;
-      textPkt_[idx++] = deviceId_ >> 8;
+      textDesc_[idx++] = static_cast<uint8_t>(manufacturerId_);
+      textDesc_[idx++] = manufacturerId_ >> 8;
+      textDesc_[idx++] = deviceId_;
+      textDesc_[idx++] = deviceId_ >> 8;
       // reserved
-      textPkt_[idx++] = 0;
+      textDesc_[idx++] = 0;
       // device identifier, sensor identifiers start from 1
-      textPkt_[idx++] = 0;
+      textDesc_[idx++] = 0;
       // device name length
-      textPkt_[idx++] = deviceName_.size() << 3;
+      textDesc_[idx++] = deviceName_.size() << 3;
       // device name
       for (size_t i = 0; i < deviceName_.length(); ++i) {
-        textPkt_[idx++] = deviceName_[i];
+        textDesc_[idx++] = deviceName_[i];
       }
       // crc8, separator and ex packet id are not included
-      textPkt_[idx] = get_crc8(&textPkt_[2], idx - 2);
-      textPktLen_ = idx + 1;
+      textDesc_[idx] = get_crc8(&textDesc_[2], idx - 2);
+      textDescSize_ = idx + 1;
 
       // initialize data descriptor
       initDataDesc();
@@ -137,11 +137,15 @@ namespace Jeti {
       AddDescLengthCRC();
     }
 
-    const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::GetTextDescriptor() {
-      return textPkt_;
+    const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::getTextDescriptor() {
+      return textDesc_;
     }
 
-    const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::GetDataDescriptor(
+    uint8_t CExDevice::getTextDescriptorSize() {
+      return textDescSize_;
+    }
+
+    const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::getDataDescriptor(
         int index) {
       uint8_t* data = &(dataPkt_[index][2]);
       data[dataPktLen_[index] - 2] = get_crc8(data, dataPktLen_[index] - 3);
@@ -149,11 +153,11 @@ namespace Jeti {
       return dataPkt_[index];
     }
 
-    std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& CExDevice::GetDataDescriptor() {
+    std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& CExDevice::getDataDescriptor() {
       return dataPkt_;
     }
 
-    const std::array<Sensor::CExSensor, EX_NB_SENSORS>& CExDevice::getSensorCollection() {
+    std::array<Sensor::CExSensor, EX_NB_SENSORS>& CExDevice::getSensorCollection() {
       return sensorCollection_;
     }
 

@@ -36,7 +36,7 @@ namespace Jeti {
 
       text_[idx] = get_crc8(&text_[2], idx - 2);
 
-      textLen_ = idx + 1;
+      textDescSize_ = idx + 1;
 
       // variable initialization
       formattedValue_[0] = 0;
@@ -50,8 +50,8 @@ namespace Jeti {
       return text_;
     }
 
-    uint8_t& CExSensor::getTextDescLen() {
-      return textLen_;
+    uint8_t& CExSensor::getTextDescriptorSize() {
+      return textDescSize_;
     }
 
     const uint8_t& CExSensor::getId() const {
@@ -225,7 +225,7 @@ namespace Jeti {
       }
       text_[idx] = get_crc8(&text_[2], idx - 2);
       idx++;
-      textLen_ = idx;
+      textDescSize_ = idx;
 
       text_[idx++] = JETI_SENSOR_HEADER;
       text_[idx++] = JETI_SENSOR_EX_ID;
@@ -244,7 +244,7 @@ namespace Jeti {
       }
       text_[idx] = get_crc8(&text_[j], idx - j);
       idx++;
-      textLen_ += idx;
+      textDescSize_ += idx;
 
       text_[idx++] = JETI_SENSOR_HEADER;
       text_[idx++] = JETI_SENSOR_EX_ID;
@@ -263,7 +263,7 @@ namespace Jeti {
       }
       text_[idx] = get_crc8(&text_[j], idx - j);
       idx++;
-      textLen_ += idx;
+      textDescSize_ += idx;
     }
   }
 }

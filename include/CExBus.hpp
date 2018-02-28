@@ -11,6 +11,7 @@
 #include "ch.hpp"
 #include "hal.h"
 
+#include "CExDevice.hpp"
 #include "CExSensor.hpp"
 
 #define JETI_EXBUS_PKT_CRC_OK       true
@@ -28,44 +29,52 @@
 namespace ExPowerBox {
 
   typedef struct {
-    std::uint8_t header[2];
-    std::uint8_t pktLen;
-    std::uint8_t packetId;
-    std::uint8_t dataId;
-    std::uint8_t dataLength;
-    std::uint8_t data[58];
+      std::uint8_t header[2];
+      std::uint8_t pktLen;
+      std::uint8_t packetId;
+      std::uint8_t dataId;
+      std::uint8_t dataLength;
+      std::uint8_t data[58];
   } packet_t;
 
   class CExBusUart: public chibios_rt::BaseStaticThread<128> {
-  public:
-    CExBusUart(thread_t *parent, SerialDriver *driver, const char *threadName);
-    virtual ~CExBusUart();
-    virtual void main(void);
-    chibios_rt::EvtSource& getEvtServoPosition();
-    void getServoPosition(uint16_t* dest);
-    uint16_t getServoPosition(int ch);
+    public:
+      CExBusUart(thread_t *parent, SerialDriver *driver,
+                 const char *threadName);
+      virtual ~CExBusUart();
+      virtual void main(void);
+      chibios_rt::EvtSource& getEvtServoPosition();
+      void getServoPosition(uint16_t* dest);
+      uint16_t getServoPosition(int ch);
 
-  private:
-    thread_t *parentThread_;
-    SerialDriver *driver_;
-    SerialConfig serialConfig_;
-    bool isClassInitialized_;
-    uint8_t rxData_;
-    const char *threadName_;
-    packet_t exPacket_ __attribute__((aligned(4)));
-    uint32_t nbExPacket_;
-    uint32_t nbExValidPacket_;
-    uint32_t nbExInvalidPacket_;
-    int8_t state_;
-    uint16_t servoPosition_[EX_NB_SERVOS];
-    //mailbox_t servoPosition_;
-    //msg_t servoPositionQueue_[EX_SERVO_POSITION_POOL_SIZE];
-    chibios_rt::EvtSource evtServoPosition_;
+    private:
+      Jeti::Device::CExDevice exDevice_;
+      thread_t *parentThread_;
+      SerialDriver *driver_;
+      SerialConfig serialConfig_;
+      bool isClassInitialized_;
+      uint8_t rxData_;
+      const char *threadName_;
+      packet_t exPacket_ __attribute__((aligned(4)));
+      std::array<packet_t, EX_NB_SENSORS> telemetryTextPkt_ __attribute__((aligned(4)));
+      uint8_t telemetryTextPktIndex_;
+      packet_t telemetryDataPkt_ __attribute__((aligned(4)));
+      uint32_t nbExPacket_;
+      uint32_t nbExValidPacket_;
+      uint32_t nbExInvalidPacket_;
+      int8_t state_;
+      uint16_t servoPosition_[EX_NB_SERVOS];
+      //mailbox_t servoPosition_;
+      //msg_t servoPositionQueue_[EX_SERVO_POSITION_POOL_SIZE];
+      chibios_rt::EvtSource evtServoPosition_;
+      uint32_t nbExTelemetryPktSent_;
 
-    bool exDecode(int8_t data);
-    void initPacket();
-    bool checkCRC();
-    void setServoPositionValues();
+      bool exDecode(int8_t data);
+      void initPacket();
+      bool checkCRC();
+      void setServoPositionValues();
+      void processTelemetryRequest();
+      void processJetiBoxRequest();
   };
 
 } /* namespace ExPowerBox */
