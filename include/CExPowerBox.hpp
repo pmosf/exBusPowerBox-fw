@@ -34,7 +34,7 @@ namespace ExPowerBox {
       uint32_t widthDivider;
   } pwm_settings_t;
 
-  class CExPowerBox: public chibios_rt::BaseStaticThread<128> {
+  class CExPowerBox: public chibios_rt::BaseStaticThread<512> {
     public:
       CExPowerBox();
       virtual ~CExPowerBox();

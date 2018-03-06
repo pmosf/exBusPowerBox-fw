@@ -35,7 +35,7 @@ namespace LTC2943
 		public:
 			CLTC2943(I2CDriver *i2cDriver, std::uint8_t batIndex);
 			~CLTC2943();
-			void init();
+			bool init();
 			void StartConv();
 			float GetCapacity();
 			float GetVoltage();
@@ -51,5 +51,7 @@ namespace LTC2943
 			std::uint8_t rxBuffer_[4];
 			msg_t i2cStatus_;
 			i2cflags_t i2cErrors_;
+
+			void processI2cError();
 	};
 }

@@ -22,42 +22,51 @@
 							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.2143276802" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1873650595" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
 								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.1447170098" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F4xx"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/CMSIS/ST/STM32F4xx"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F4xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1534595728" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU=TRUE"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.369209271" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.531047309" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv3"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1337802279" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1707090075" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
 								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.2086965352" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F4xx"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/CMSIS/ST/STM32F4xx"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F4xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.686970243" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU=TRUE"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.1698070856" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.396969385" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv3"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.338985256" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1165165914" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
 								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.572974545" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv1"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F4xx"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/CMSIS/ST/STM32F4xx"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F4xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.965096908" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU=TRUE"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.844046750" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1127607706" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv3"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.714476670" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="0.114656749.906240667" name="CExBus.cpp" rcbsApplicability="disable" resourcePath="src/CExBus.cpp" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.1707090075.17621782">
-						<tool id="org.eclipse.cdt.build.core.settings.holder.1707090075.17621782" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder.1707090075"/>
-					</fileInfo>
 					<sourceEntries>
 						<entry excluding="src|include|test" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry excluding="ExSensorList.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="include"/>

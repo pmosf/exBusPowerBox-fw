@@ -24,12 +24,26 @@ namespace ExPowerBox {
     setName("SensorAcq");
     i2cStart(i2cDriver_, &i2cConfig_);
 
-    ltc2943_[0].init();
-    ltc2943_[1].init();
-    max6639_.init();
+    if (!ltc2943_[0].init()) {
+      i2cAcquireBus(i2cDriver_);
+      i2cDriver_->state = I2C_READY;
+      i2cReleaseBus(i2cDriver_);
+    }
+
+    if (!ltc2943_[1].init()) {
+      i2cAcquireBus(i2cDriver_);
+      i2cDriver_->state = I2C_READY;
+      i2cReleaseBus(i2cDriver_);
+    }
+
+    if (!max6639_.init()) {
+      i2cAcquireBus(i2cDriver_);
+      i2cDriver_->state = I2C_READY;
+      i2cReleaseBus(i2cDriver_);
+    }
 
     while (true) {
-
+      chibios_rt::BaseThread::sleep(TIME_MS2I(500));
     }
   }
 

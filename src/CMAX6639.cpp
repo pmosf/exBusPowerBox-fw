@@ -6,7 +6,7 @@ namespace MAX6639 {
       i2cDriver_(i2cDriver), isPresent_(true) {
   }
 
-  void CMAX6639::init() {
+  bool CMAX6639::init() {
     txBuffer_[0] = MAX6639_DEVID_ADDR;
     i2cAcquireBus(i2cDriver_);
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, IIC_MAX6639_ADDR,
@@ -17,7 +17,7 @@ namespace MAX6639 {
     if (i2cStatus_ != MSG_OK || *rxBuffer_ != MAX6639_DEVICE_ID) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
       isPresent_ = false;
-      return;
+      return false;
     }
 
     // set 2nd sensor as external
@@ -32,8 +32,10 @@ namespace MAX6639 {
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
       isPresent_ = false;
-      return;
+      return false;
     }
+
+    return true;
   }
 
   float CMAX6639::GetExtTemperature(std::uint8_t sensorIndex) {

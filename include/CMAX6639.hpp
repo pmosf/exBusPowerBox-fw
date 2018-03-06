@@ -29,7 +29,7 @@ namespace MAX6639 {
   class CMAX6639 {
     public:
       CMAX6639(I2CDriver *i2cDriver);
-      void init();
+      bool init();
       float GetExtTemperature(std::uint8_t sensorIndex);
       float GetLocalTemperature(void);
       std::uint16_t GetRpm(void);

@@ -28,13 +28,13 @@ namespace Jeti {
          Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
                                       CExDevice::deviceId_, 9, "T Ext2")};
 
-    std::map<const char*, const Sensor::CExSensor*> CExDevice::sensorMap_ = {
+/*    const std::map<const char*, const Sensor::CExSensor*> CExDevice::sensorMap_ = {
         {"V Bat1", &sensorCollection_[0]}, {"V Bat2", &sensorCollection_[1]}, {
             "I Bat1", &sensorCollection_[2]},
         {"I Bat1", &sensorCollection_[3]}, {"C Bat1", &sensorCollection_[4]}, {
             "C Bat1", &sensorCollection_[5]},
         {"T Local", &sensorCollection_[6]}, {"T Ext1", &sensorCollection_[7]}, {
-            "T Ext2", &sensorCollection_[8]}};
+            "T Ext2", &sensorCollection_[8]}};*/
 
     CExDevice::CExDevice() {
 
@@ -166,11 +166,11 @@ namespace Jeti {
     }
 
     const Sensor::CExSensor* CExDevice::getSensor(const std::string& name) {
-      std::map<const char*, const Sensor::CExSensor*>::iterator it =
+      /*const std::map<const char*, const Sensor::CExSensor*>::iterator it =
           sensorMap_.find(name.c_str());
       if (it != sensorMap_.end())
         return it->second;
-      else
+      else*/
         return nullptr;
     }
 

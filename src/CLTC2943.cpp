@@ -12,7 +12,7 @@ namespace LTC2943 {
 
   }
 
-  void CLTC2943::init() {
+  bool CLTC2943::init() {
     // select slave
     i2cAcquireBus(i2cDriver_);
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, PCA9543A_I2C_ADDR,
@@ -23,7 +23,7 @@ namespace LTC2943 {
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
       isInitialized_ = false;
-      return;
+      return false;
     }
 
     // power down to set capacity register
@@ -39,7 +39,7 @@ namespace LTC2943 {
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
       isInitialized_ = false;
-      return;
+      return false;
     }
 
     // set capacity register to max
@@ -56,7 +56,7 @@ namespace LTC2943 {
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
       isInitialized_ = false;
-      return;
+      return false;
     }
 
     // set ADC in automatic mode and prescaler
@@ -72,10 +72,11 @@ namespace LTC2943 {
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
       isInitialized_ = false;
-      return;
+      return false;
     }
 
     isInitialized_ = true;
+    return true;
   }
 
   void CLTC2943::StartConv() {
@@ -172,5 +173,8 @@ namespace LTC2943 {
     }
 
     return ((rxBuffer_[0] << 8) | rxBuffer_[1]);
+  }
+
+  void CLTC2943::processI2cError(){
   }
 }

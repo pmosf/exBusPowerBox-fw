@@ -37,10 +37,6 @@ namespace Jeti {
       text_[idx] = get_crc8(&text_[2], idx - 2);
 
       textDescSize_ = idx + 1;
-
-      // variable initialization
-      formattedValue_[0] = 0;
-      formattedValue_[1] = 0x60;
     }
 
     CExSensor::~CExSensor() {

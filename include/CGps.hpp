@@ -86,7 +86,7 @@ namespace GPS {
       chibios_rt::Mutex mtx;
   } gps_satellites_t;
 
-  class CGps: public chibios_rt::BaseStaticThread<128> {
+  class CGps: public chibios_rt::BaseStaticThread<512> {
     public:
       CGps(SerialDriver *uartDriver);
       ~CGps();

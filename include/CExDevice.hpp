@@ -49,7 +49,7 @@ namespace Jeti {
         const static uint16_t manufacturerId_;
         const static uint16_t deviceId_;
         static std::array<Sensor::CExSensor, EX_NB_SENSORS> sensorCollection_;
-        static std::map<const char*, const Sensor::CExSensor*> sensorMap_;
+        //const static std::map<const char*, const Sensor::CExSensor*> sensorMap_;
         std::array<uint8_t, EX_MAX_PKT_LEN> textDesc_;
         uint8_t textDescSize_;
         std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS> dataPkt_;

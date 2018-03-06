@@ -18,7 +18,7 @@
 
 namespace ExPowerBox {
 
-  class CSensorAcquisition: public chibios_rt::BaseStaticThread<128> {
+  class CSensorAcquisition: public chibios_rt::BaseStaticThread<512> {
   public:
     CSensorAcquisition(SerialDriver *gpsSerialDriver, I2CDriver *i2cDriver);
     virtual ~CSensorAcquisition();
