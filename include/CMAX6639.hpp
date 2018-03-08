@@ -5,7 +5,7 @@
 
 #include "hal.h"
 
-#define IIC_MAX6639_ADDR		0x5C//0x58
+#define IIC_MAX6639_ADDR		0x58
 
 #define MAX6639_TEMP1_ADDR		0
 #define MAX6639_TEMP2_ADDR		1

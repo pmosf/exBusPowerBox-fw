@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-#define LTC2943_I2C_ADDR	0xC8
+#define LTC2943_I2C_ADDR	0x64
 
 #define LTC2943_STATUS_ADDR			0
 #define LTC2943_CTRL_ADDR			1

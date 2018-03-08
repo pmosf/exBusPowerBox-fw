@@ -118,8 +118,8 @@ CSRC = $(STARTUPSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
        $(CHIBIOS)/os/various/syscalls.c \
-       src/unhandeld_ex.c \
- 		src/crc.c
+ 		src/crc.c \
+ 		src/usbcfg.c
  		
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

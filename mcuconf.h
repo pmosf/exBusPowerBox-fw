@@ -62,15 +62,15 @@
 #define STM32_MCO2PRE                       STM32_MCO2PRE_DIV4
 #define STM32_I2SSRC                        STM32_I2SSRC_OFF
 #define STM32_PLLI2SN_VALUE                 192
-#define STM32_PLLI2SP_VALUE                 4
-#define STM32_PLLI2SQ_VALUE                 4
-#define STM32_PLLI2SR_VALUE                 4
+#define STM32_PLLI2SP_VALUE                 2
+#define STM32_PLLI2SQ_VALUE                 2
+#define STM32_PLLI2SR_VALUE                 2
 #define STM32_PLLSAIN_VALUE                 192
-#define STM32_PLLSAIP_VALUE                 4
-#define STM32_PLLSAIQ_VALUE                 4
-#define STM32_PLLSAIR_VALUE                 4
+#define STM32_PLLSAIP_VALUE                 2
+#define STM32_PLLSAIQ_VALUE                 2
+#define STM32_PLLSAIR_VALUE                 2
 #define STM32_PLLSAIDIVQ_VALUE              2
-#define STM32_PLLSAIDIVR_VALUE              4
+#define STM32_PLLSAIDIVR_VALUE              2
 #define STM32_SAI1SEL                       STM32_SAI1SEL_OFF
 #define STM32_SAI2SEL                       STM32_SAI2SEL_OFF
 #define STM32_LCDTFT_REQUIRED               FALSE
@@ -182,12 +182,13 @@
 /*
  * I2C driver system settings.
  */
+#define STM32_I2C_USE_DMA                   FALSE
 #define STM32_I2C_USE_I2C1                  TRUE
 #define STM32_I2C_USE_I2C2                  FALSE
 #define STM32_I2C_USE_I2C3                  FALSE
 #define STM32_I2C_USE_I2C4                  FALSE
 #define STM32_I2C_BUSY_TIMEOUT              50
-#define STM32_I2C_I2C1_RX_DMA_STREAM        STM32_DMA_STREAM_ID(1, 0)
+#define STM32_I2C_I2C1_RX_DMA_STREAM        STM32_DMA_STREAM_ID(1, 5)
 #define STM32_I2C_I2C1_TX_DMA_STREAM        STM32_DMA_STREAM_ID(1, 6)
 #define STM32_I2C_I2C2_RX_DMA_STREAM        STM32_DMA_STREAM_ID(1, 2)
 #define STM32_I2C_I2C2_TX_DMA_STREAM        STM32_DMA_STREAM_ID(1, 7)
@@ -344,7 +345,7 @@
 #define STM32_UART_USE_USART6               FALSE
 #define STM32_UART_USE_UART7                FALSE
 #define STM32_UART_USE_UART8                FALSE
-#define STM32_UART_USART1_RX_DMA_STREAM     STM32_DMA_STREAM_ID(2, 5)
+#define STM32_UART_USART1_RX_DMA_STREAM     STM32_DMA_STREAM_ID(2, 2)
 #define STM32_UART_USART1_TX_DMA_STREAM     STM32_DMA_STREAM_ID(2, 7)
 #define STM32_UART_USART2_RX_DMA_STREAM     STM32_DMA_STREAM_ID(1, 5)
 #define STM32_UART_USART2_TX_DMA_STREAM     STM32_DMA_STREAM_ID(1, 6)

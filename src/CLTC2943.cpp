@@ -14,11 +14,9 @@ namespace LTC2943 {
 
   bool CLTC2943::init() {
     // select slave
-    i2cAcquireBus(i2cDriver_);
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, PCA9543A_I2C_ADDR,
                                           &batIndex_, 1, nullptr, 0,
-                                          TIME_MS2I(10));
-    i2cReleaseBus(i2cDriver_);
+                                          TIME_S2I(1));
 
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
@@ -30,11 +28,9 @@ namespace LTC2943 {
     txBuffer_[0] = LTC2943_CTRL_ADDR;
     txBuffer_[1] = 1;
 
-    i2cAcquireBus(i2cDriver_);
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
                                           txBuffer_, 2, nullptr, 0,
                                           TIME_MS2I(10));
-    i2cReleaseBus(i2cDriver_);
 
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
@@ -47,11 +43,9 @@ namespace LTC2943 {
     txBuffer_[1] = 0xFF;
     txBuffer_[2] = 0xFF;
 
-    i2cAcquireBus(i2cDriver_);
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
                                           txBuffer_, 3, nullptr, 0,
                                           TIME_MS2I(10));
-    i2cReleaseBus(i2cDriver_);
 
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
@@ -63,11 +57,9 @@ namespace LTC2943 {
     txBuffer_[0] = LTC2943_CTRL_ADDR;
     txBuffer_[1] = LTC2943_ADC_MODE_AUTO | LTC2943_PRESCALER_1024;
 
-    i2cAcquireBus(i2cDriver_);
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
                                           txBuffer_, 2, nullptr, 0,
                                           TIME_MS2I(10));
-    i2cReleaseBus(i2cDriver_);
 
     if (i2cStatus_ != MSG_OK) {
       i2cErrors_ = i2cGetErrors(i2cDriver_);
@@ -175,6 +167,6 @@ namespace LTC2943 {
     return ((rxBuffer_[0] << 8) | rxBuffer_[1]);
   }
 
-  void CLTC2943::processI2cError(){
+  void CLTC2943::processI2cError() {
   }
 }

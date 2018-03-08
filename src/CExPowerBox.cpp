@@ -13,9 +13,9 @@
 
 namespace ExPowerBox {
   CExPowerBox::CExPowerBox() :
-      exBus_ {CExBusUart(this->thread_ref, &SD4, "exBusUart4"),
-                           CExBusUart(this->thread_ref, &SD5, "exBusUart5"),
-                           CExBusUart(this->thread_ref, &SD6, "exBusUart6")}, sensorAcq_(
+      exBus_ {CExBusUart(this->thread_ref, &SD4, "exBusUart4"), CExBusUart(
+          this->thread_ref, &SD5, "exBusUart5"),
+              CExBusUart(this->thread_ref, &SD6, "exBusUart6")}, sensorAcq_(
           &SD1, &I2CD1), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
 
     // set initial pwm frequency and period
@@ -33,7 +33,21 @@ namespace ExPowerBox {
     }
 
     initPwm();
-    initPins();
+    updateServoPositions(true);
+#if 0
+    // USB initialization
+    sduObjectInit(&serialUsbDriver_);
+    sduStart(&serialUsbDriver_, &serialUsbCfg_);
+    /*
+     * Activates the USB driver and then the USB bus pull-up on D+.
+     * Note, a delay is inserted in order to not have to disconnect the cable
+     * after a reset.
+     */
+    usbDisconnectBus(serialUsbCfg_.usbp);
+    chThdSleepMilliseconds(1500);
+    usbStart(serialUsbCfg_.usbp, &usbCfg_);
+    usbConnectBus(serialUsbCfg_.usbp);
+#endif
   }
 
   CExPowerBox::~CExPowerBox() {
@@ -131,52 +145,6 @@ namespace ExPowerBox {
     }
   }
 
-  void CExPowerBox::initPins() {
-    // Servo outputs
-    palSetPadMode(GPIOA, GPIOA_SERVO1, PAL_MODE_ALTERNATE(2)); // TIM5_CH1 - servo 1
-    palSetPadMode(GPIOA, GPIOA_SERVO2, PAL_MODE_ALTERNATE(1)); // TIM2_CH2 - servo 2
-    palSetPadMode(GPIOA, GPIOA_SERVO3, PAL_MODE_ALTERNATE(2)); // TIM5_CH3 - servo 3
-    palSetPadMode(GPIOA, GPIOA_SERVO4, PAL_MODE_ALTERNATE(2)); // TIM5_CH4 - servo 4
-
-    palSetPadMode(GPIOB, 10, PAL_MODE_ALTERNATE(1)); // TIM2_CH3 - servo 5
-    palSetPadMode(GPIOB, 11, PAL_MODE_ALTERNATE(1)); // TIM2_CH4 - servo 6
-
-    palSetPadMode(GPIOA, 9, PAL_MODE_ALTERNATE(1)); // TIM1_CH1 - servo 7
-    palSetPadMode(GPIOA, 11, PAL_MODE_ALTERNATE(1)); // TIM1_CH2 - servo 8
-    palSetPadMode(GPIOA, 13, PAL_MODE_ALTERNATE(1)); // TIM1_CH3 - servo 9
-    palSetPadMode(GPIOA, 14, PAL_MODE_ALTERNATE(1)); // TIM1_CH4 - servo 10
-
-    palSetPadMode(GPIOA, 5, PAL_MODE_ALTERNATE(1)); // TIM2_CH1 - servo 11
-    palSetPadMode(GPIOA, 6, PAL_MODE_ALTERNATE(2)); // TIM3_CH1 - servo 12
-    palSetPadMode(GPIOA, 7, PAL_MODE_ALTERNATE(2)); // TIM3_CH2 - servo 13
-
-    palSetPadMode(GPIOB, 5, PAL_MODE_ALTERNATE(2)); // TIM3_CH3 - servo 14
-    palSetPadMode(GPIOB, 6, PAL_MODE_ALTERNATE(2)); // TIM3_CH4 - servo 15
-    palSetPadMode(GPIOB, 14, PAL_MODE_ALTERNATE(9)); // TIM3_CH5 - servo 16
-
-    // I2C1
-    palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4));
-    palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(4));
-
-    // USB
-    palSetPadMode(GPIOA, GPIOA_OTG_FS_DM, PAL_MODE_ALTERNATE(10));
-    palSetPadMode(GPIOA, GPIOA_OTG_FS_DP, PAL_MODE_ALTERNATE(10));
-
-    // USART1 - GPS
-    palSetPadMode(GPIOB, 6, PAL_MODE_ALTERNATE(7));
-    palSetPadMode(GPIOB, 7, PAL_MODE_ALTERNATE(7));
-
-    // USART4 - Jeti receiver 1
-    palSetPadMode(GPIOC, 10, PAL_MODE_ALTERNATE(8));
-
-    // USART5 - Jeti receiver 2
-    palSetPadMode(GPIOC, 12, PAL_MODE_ALTERNATE(8));
-
-    // USART6 - Bootloader / Jeti receiver 3
-    palSetPadMode(GPIOB, 6, PAL_MODE_ALTERNATE(7));
-    palSetPadMode(GPIOB, 7, PAL_MODE_ALTERNATE(7));
-  }
-
   void CExPowerBox::initPwm() {
     for (int i = 0; i < NB_PWM; ++i) {
     pwmConfig_[i] = {pwmSettings_.freq,
@@ -187,7 +155,7 @@ namespace ExPowerBox {
           nullptr},
         { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
           PWM_OUTPUT_ACTIVE_HIGH,
-          nullptr},},
+          nullptr}, {PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {PWM_OUTPUT_ACTIVE_HIGH, nullptr}},
       0, 0};
     pwmStart(pwmDriver_[i], &pwmConfig_[i]);
   }

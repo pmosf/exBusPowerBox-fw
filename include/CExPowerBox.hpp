@@ -41,7 +41,6 @@ namespace ExPowerBox {
       virtual void main();
 
     private:
-      void initPins();
       void initPwm();
       void updateServoPositions(bool failSafe);
       void updatePwmSettings(uint32_t freq, float period);
@@ -57,5 +56,8 @@ namespace ExPowerBox {
       std::array<uint32_t, NB_EX_UART> nbTotalExBusTimeout_;
       pwm_settings_t pwmSettings_;
       uint32_t exBusSel_;
+      USBConfig usbCfg_;
+      SerialUSBConfig serialUsbCfg_;
+      SerialUSBDriver serialUsbDriver_;
   };
 }
