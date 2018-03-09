@@ -17,7 +17,7 @@
 #include "CSensorAcquisition.hpp"
 
 #define NB_EX_UART          3
-#define NB_PWM              5
+#define NB_TIM_PWM          5
 #define EXBUS0              EVENT_MASK(0)
 #define EXBUS1              EVENT_MASK(1)
 #define EXBUS2              EVENT_MASK(2)
@@ -50,8 +50,8 @@ namespace ExPowerBox {
       chibios_rt::EvtListener exBusEvtListener_[NB_EX_UART];
       std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
       std::array<uint16_t, EX_NB_SERVOS> servoFailSafePosition_;
-      PWMDriver *pwmDriver_[NB_PWM];
-      PWMConfig pwmConfig_[NB_PWM];
+      std::array<PWMDriver*, NB_TIM_PWM> pwmDriver_;
+      std::array<PWMConfig, NB_TIM_PWM> pwmConfig_;
       std::array<uint32_t, NB_EX_UART> nbExBusTimeout_;
       std::array<uint32_t, NB_EX_UART> nbTotalExBusTimeout_;
       pwm_settings_t pwmSettings_;

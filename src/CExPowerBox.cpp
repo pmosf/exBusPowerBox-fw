@@ -68,7 +68,7 @@ namespace ExPowerBox {
     }
 
     // start sensor acquisition thread
-    sensorAcq_.start(NORMALPRIO + 10);
+    sensorAcq_.start(NORMALPRIO - 1);
 
     while (true) {
       // set servos to fail-safe positions if no activity on exbus uarts
@@ -123,40 +123,95 @@ namespace ExPowerBox {
 
     // set servos to fail-safe positions
     if (failSafe) {
-      for (int i = 0; i < NB_PWM; ++i) {
+      for (size_t i = 0; i < pwmDriver_.size(); ++i) {
         for (int j = 0; j < pwmDriver_[i]->channels; ++j) {
-          pwmEnableChannel(
-              pwmDriver_[i],
-              j,
-              servoFailSafePosition_[servoPositionIndex++]
-                  / pwmSettings_.widthDivider);
+          if (pwmDriver_[i]->config->channels[j].mode) {
+            pwmEnableChannel(
+                pwmDriver_[i],
+                j,
+                servoFailSafePosition_[servoPositionIndex++]
+                    / pwmSettings_.widthDivider);
+          }
         }
       }
       return;
     }
 
     // update servo with refreshed values
-    for (int i = 0; i < NB_PWM; ++i) {
+    for (size_t i = 0; i < pwmDriver_.size(); ++i) {
       for (int j = 0; j < pwmDriver_[i]->channels; ++j) {
-        pwmEnableChannel(
-            pwmDriver_[i], j,
-            servoPosition_[servoPositionIndex++] / pwmSettings_.widthDivider);
+        if (pwmDriver_[i]->config->channels[j].mode) {
+          pwmEnableChannel(
+              pwmDriver_[i], j,
+              servoPosition_[servoPositionIndex++] / pwmSettings_.widthDivider);
+        }
       }
     }
   }
 
   void CExPowerBox::initPwm() {
-    for (int i = 0; i < NB_PWM; ++i) {
-    pwmConfig_[i] = {pwmSettings_.freq,
-      pwmSettings_.periodTick,
-      nullptr, /* No callback */
-      { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
-          PWM_OUTPUT_ACTIVE_HIGH,
-          nullptr},
-        { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
-          PWM_OUTPUT_ACTIVE_HIGH,
-          nullptr}, {PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {PWM_OUTPUT_ACTIVE_HIGH, nullptr}},
-      0, 0};
+
+    // TIM1
+  pwmConfig_[0] = {pwmSettings_.freq,
+    pwmSettings_.periodTick,
+    nullptr, /* No callback */
+    { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr},
+      { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
+    0, 0};
+
+  // TIM2
+  pwmConfig_[1] = {pwmSettings_.freq,
+    pwmSettings_.periodTick,
+    nullptr, /* No callback */
+    { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr},
+      { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
+    0, 0};
+
+  // TIM3
+  pwmConfig_[2] = {pwmSettings_.freq,
+    pwmSettings_.periodTick,
+    nullptr, /* No callback */
+    { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr},
+      { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
+    0, 0};
+
+  // TIM5
+  pwmConfig_[3] = {pwmSettings_.freq,
+    pwmSettings_.periodTick,
+    nullptr, /* No callback */
+    { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_DISABLED,
+        nullptr},
+      { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
+    0, 0};
+
+  // TIM12
+  pwmConfig_[4] = {pwmSettings_.freq,
+    pwmSettings_.periodTick,
+    nullptr, /* No callback */
+    { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+        PWM_OUTPUT_DISABLED,
+        nullptr},
+      { PWM_OUTPUT_DISABLED, nullptr}, {
+        PWM_OUTPUT_DISABLED,
+        nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
+    0, 0};
+
+  for (size_t i = 0; i < pwmDriver_.size(); ++i) {
     pwmStart(pwmDriver_[i], &pwmConfig_[i]);
   }
 }
