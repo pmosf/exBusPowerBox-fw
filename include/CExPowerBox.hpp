@@ -44,6 +44,7 @@ namespace ExPowerBox {
       void initPwm();
       void updateServoPositions(bool failSafe);
       void updatePwmSettings(uint32_t freq, float period);
+      void processExBusTimeout();
 
       CExBusUart exBus_[NB_EX_UART];
       CSensorAcquisition sensorAcq_;

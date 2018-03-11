@@ -86,32 +86,43 @@ namespace ExPowerBox {
         if (!validEvtReceived_)
           continue;
 
-        nbTotalExBusTimeout_[exBusSel_]++;
-        if (++nbExBusTimeout_[exBusSel_] == 4) {
-          nbExBusTimeout_[exBusSel_] = 0;
-          exBusSel_++;
-        }
+        processExBusTimeout();
         continue;
       }
       validEvtReceived_ = true;
 
-      nbExBusTimeout_[exBusSel_] = 0;
       evt = getAndClearEvents(ALL_EVENTS);
       eventflags_t flags = exBusEvent_[exBusSel_].getAndClearFlags();
 
       if (flags & EXBUS_SERVO_POSITIONS) {
+        nbExBusTimeout_[exBusSel_] = 0;
         exBus_[exBusSel_].getServoPosition(&servoPosition_[0]);
         updateServoPositions(false);
         continue;
       }
 
       if (flags & EXBUS_TELEMETRY) {
+        nbExBusTimeout_[exBusSel_] = 0;
         continue;
       }
 
       if (flags & EXBUS_JETIBOX) {
+        nbExBusTimeout_[exBusSel_] = 0;
         continue;
       }
+
+      if (flags & EXBUS_TIMEOUT) {
+        processExBusTimeout();
+        continue;
+      }
+    }
+  }
+
+  void CExPowerBox::processExBusTimeout() {
+    nbTotalExBusTimeout_[exBusSel_]++;
+    if (++nbExBusTimeout_[exBusSel_] == 4) {
+      nbExBusTimeout_[exBusSel_] = 0;
+      exBusSel_++;
     }
   }
 
