@@ -39,11 +39,11 @@ namespace ExPowerBox {
 
   class CExBusUart: public chibios_rt::BaseStaticThread<128> {
     public:
-      CExBusUart(thread_t *parent, SerialDriver *driver,
+      CExBusUart(chibios_rt::EvtListener* evtListener, SerialDriver *driver,
                  const char *threadName);
       virtual ~CExBusUart();
       virtual void main(void);
-      chibios_rt::EvtSource& getEvtServoPosition();
+      chibios_rt::EvtSource* getEvent();
       void getServoPosition(uint16_t* dest);
       uint16_t getServoPosition(int ch);
 
@@ -63,14 +63,13 @@ namespace ExPowerBox {
       uint32_t nbExValidPacket_;
       uint32_t nbExInvalidPacket_;
       int8_t state_;
-      uint16_t servoPosition_[EX_NB_SERVOS];
-      //mailbox_t servoPosition_;
-      //msg_t servoPositionQueue_[EX_SERVO_POSITION_POOL_SIZE];
-      chibios_rt::EvtSource evtServoPosition_;
+      std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
+      chibios_rt::EvtSource evt_;
       uint32_t nbExTelemetryPktSent_;
 
       bool exDecode(int8_t data);
       void initPacket();
+      void initTextDesc();
       bool checkCRC();
       void setServoPositionValues();
       void processTelemetryRequest();

@@ -12,12 +12,12 @@
 
 namespace ExPowerBox {
 
-  CExBusUart::CExBusUart(thread_t *parent, SerialDriver *driver,
+  CExBusUart::CExBusUart(chibios_rt::EvtListener *evtListener, SerialDriver *driver,
                          const char *threadName) :
-      exDevice_(), parentThread_(parent), driver_(driver), serialConfig_( {
+      driver_(driver), serialConfig_( {
           125000, 0,
           USART_CR2_STOP_1,
-          USART_CR3_HDSEL}), threadName_(threadName) {
+          USART_CR3_HDSEL}), threadName_(threadName),evt_() {
 
     state_ = 0;
     nbExPacket_ = 0;
@@ -28,8 +28,9 @@ namespace ExPowerBox {
     telemetryTextPktIndex_ = 0;
 
     initPacket();
+    initTextDesc();
 
-    for (int i = 0; i < EX_NB_SERVOS; ++i)
+    for (int i = 0; i < servoPosition_.size(); ++i)
       servoPosition_[i] = 0;
   }
 
@@ -37,13 +38,13 @@ namespace ExPowerBox {
     sdStop(driver_);
   }
 
-  chibios_rt::EvtSource& CExBusUart::getEvtServoPosition() {
-    return evtServoPosition_;
+  chibios_rt::EvtSource* CExBusUart::getEvent() {
+    return &evt_;
   }
 
   void CExBusUart::getServoPosition(uint16_t* dest) {
     chSysLock();
-    for (int i = 0; i < EX_NB_SERVOS; ++i) {
+    for (int i = 0; i < servoPosition_.size(); ++i) {
       *dest++ = servoPosition_[i];
     }
     chSysUnlock();
@@ -84,23 +85,26 @@ namespace ExPowerBox {
             uint8_t *p = exPacket_.data;
 
             chSysLock();
-            for (int i = 0; i < EX_NB_SERVOS; ++i) {
+            for (size_t i = 0; i < servoPosition_.size(); ++i) {
               servoPosition_[i] = *(uint16_t*)p;
               p += 2;
             }
             chSysUnlock();
 
-            signalEvents(EXBUS_SERVO_POSITIONS);
+            evt_.broadcastFlags(EXBUS_SERVO_POSITIONS);
+            initPacket();
             continue;
           }
           else if (exPacket_.dataId == JETI_EX_ID_TELEMETRY) {
-            signalEvents(EXBUS_TELEMETRY);
             processTelemetryRequest();
+            evt_.broadcastFlags(EXBUS_TELEMETRY);
+            initPacket();
             continue;
           }
           else if (exPacket_.dataId == JETI_EX_ID_JETIBOX) {
-            signalEvents(EXBUS_JETIBOX);
             processJetiBoxRequest();
+            evt_.broadcastFlags(JETI_EX_ID_JETIBOX);
+            initPacket();
             continue;
           }
         }
@@ -149,25 +153,25 @@ namespace ExPowerBox {
         break;
 
         // packet length
-      case 3:
+      case 2:
         exPacket_.pktLen = data;
         state_++;
         break;
 
         // packet ID
-      case 4:
+      case 3:
         exPacket_.packetId = data;
         state_++;
         break;
 
         // data ID
-      case 5:
+      case 4:
         exPacket_.dataId = data;
         state_++;
         break;
 
         // data length
-      case 6:
+      case 5:
         exPacket_.dataLength = data;
         state_++;
         break;
@@ -196,12 +200,16 @@ namespace ExPowerBox {
   }
 
   void CExBusUart::initPacket() {
-    int8_t *p = (int8_t*)&exPacket_;
+     int8_t *p = (int8_t*)&exPacket_;
 
-    for (int i = 0; i < 4; ++i) {
-      *p++ = 0;
-    }
+     for (int i = 0; i < 4; ++i) {
+       *p++ = 0;
+     }
 
+     state_ = 0;
+  }
+
+  void CExBusUart::initTextDesc() {
     // create telemetry text packet for device
     telemetryTextPkt_[0].header[0] = 0x3B;
     telemetryTextPkt_[0].header[1] = 0x01;

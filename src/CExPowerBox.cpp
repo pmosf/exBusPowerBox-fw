@@ -13,19 +13,22 @@
 
 namespace ExPowerBox {
   CExPowerBox::CExPowerBox() :
-      exBus_ {CExBusUart(this->thread_ref, &SD4, "exBusUart4"), CExBusUart(
-          this->thread_ref, &SD5, "exBusUart5"),
-              CExBusUart(this->thread_ref, &SD6, "exBusUart6")}, sensorAcq_(
+      exBus_ {CExBusUart(nullptr, &SD4, "exBusUart4"), CExBusUart(
+          nullptr, &SD5, "exBusUart5"),
+              CExBusUart(nullptr, &SD6, "exBusUart6")}, sensorAcq_(
           &SD1, &I2CD1), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
 
     // set initial pwm frequency and period
     updatePwmSettings(2000000UL, 20E-3);
-    // set fail-safe servo values to middle position
-    for (int i = 0; i < EX_NB_SERVOS; ++i)
+    // set fail-safe and initial servo values to middle position
+    for (int i = 0; i < EX_NB_SERVOS; ++i) {
       servoFailSafePosition_[i] = 1.5E-3 * EX_PWM_FREQ;
+      servoPosition_[i] = 0;
+    }
 
     // 1st exbus uart is selected by default
     exBusSel_ = 0;
+    validEvtReceived_ = false;
     // initialize timeout counters
     for (int i = 0; i < NB_EX_UART; ++i) {
       nbExBusTimeout_[i] = 0;
@@ -33,7 +36,6 @@ namespace ExPowerBox {
     }
 
     initPwm();
-    updateServoPositions(true);
 #if 0
     // USB initialization
     sduObjectInit(&serialUsbDriver_);
@@ -60,10 +62,8 @@ namespace ExPowerBox {
 
     // register exbus events and start threads
     for (int i = 0; i < NB_EX_UART; ++i) {
-      exBus_[i].getEvtServoPosition().registerMaskWithFlags(
-          &exBusEvtListener_[i], EVENT_MASK(i),
-          EXBUS_SERVO_POSITIONS | EXBUS_TIMEOUT | EXBUS_CRC_ERR);
-
+      exBus_[i].getEvent()->registerMask(&exBusEvent_[i], EVENT_MASK(i));
+      addEvents(EVENT_MASK(i));
       exBus_[i].start(NORMALPRIO);
     }
 
@@ -79,10 +79,14 @@ namespace ExPowerBox {
 
       // Waiting for ExBus events
       eventmask_t evt = waitOneEventTimeout(
-          ((eventmask_t)1 << (eventmask_t)(exBusSel_)), TIME_MS2I(25));
+          ((eventmask_t)1 << (eventmask_t)(exBusSel_)), TIME_MS2I(30));
 
       // in case of 4 consecutive timeouts, we select another exbus receiver
       if (evt == 0) {
+        // wait for one valid event before timeout detection
+        if (!validEvtReceived_)
+          continue;
+
         nbTotalExBusTimeout_[exBusSel_]++;
         if (++nbExBusTimeout_[exBusSel_] == 4) {
           nbExBusTimeout_[exBusSel_] = 0;
@@ -90,10 +94,11 @@ namespace ExPowerBox {
         }
         continue;
       }
+      validEvtReceived_ = true;
 
       nbExBusTimeout_[exBusSel_] = 0;
       evt = getAndClearEvents(ALL_EVENTS);
-      eventflags_t flags = exBusEvtListener_[exBusSel_].getAndClearFlags();
+      eventflags_t flags = exBusEvent_[exBusSel_].getAndClearFlags();
 
       if (flags & EXBUS_SERVO_POSITIONS) {
         exBus_[exBusSel_].getServoPosition(&servoPosition_[0]);

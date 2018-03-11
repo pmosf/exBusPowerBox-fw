@@ -47,7 +47,7 @@ namespace ExPowerBox {
 
       CExBusUart exBus_[NB_EX_UART];
       CSensorAcquisition sensorAcq_;
-      chibios_rt::EvtListener exBusEvtListener_[NB_EX_UART];
+      chibios_rt::EvtListener exBusEvent_[NB_EX_UART];
       std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
       std::array<uint16_t, EX_NB_SERVOS> servoFailSafePosition_;
       std::array<PWMDriver*, NB_TIM_PWM> pwmDriver_;
@@ -56,6 +56,7 @@ namespace ExPowerBox {
       std::array<uint32_t, NB_EX_UART> nbTotalExBusTimeout_;
       pwm_settings_t pwmSettings_;
       uint32_t exBusSel_;
+      bool validEvtReceived_;
       USBConfig usbCfg_;
       SerialUSBConfig serialUsbCfg_;
       SerialUSBDriver serialUsbDriver_;
