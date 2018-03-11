@@ -39,8 +39,7 @@ namespace ExPowerBox {
 
   class CExBusUart: public chibios_rt::BaseStaticThread<128> {
     public:
-      CExBusUart(chibios_rt::EvtListener* evtListener, SerialDriver *driver,
-                 const char *threadName);
+      CExBusUart(SerialDriver *driver, const char *threadName);
       virtual ~CExBusUart();
       virtual void main(void);
       chibios_rt::EvtSource* getEvent();
@@ -49,14 +48,13 @@ namespace ExPowerBox {
 
     private:
       Jeti::Device::CExDevice exDevice_;
-      thread_t *parentThread_;
       SerialDriver *driver_;
       SerialConfig serialConfig_;
       bool isClassInitialized_;
       uint8_t rxData_;
       const char *threadName_;
       packet_t exPacket_ __attribute__((aligned(4)));
-      std::array<packet_t, EX_NB_SENSORS> telemetryTextPkt_ __attribute__((aligned(4)));
+      std::array<packet_t, EX_NB_SENSORS + 1> telemetryTextPkt_ __attribute__((aligned(4)));
       uint8_t telemetryTextPktIndex_;
       packet_t telemetryDataPkt_ __attribute__((aligned(4)));
       uint32_t nbExPacket_;

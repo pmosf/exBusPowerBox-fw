@@ -12,12 +12,11 @@
 
 namespace ExPowerBox {
 
-  CExBusUart::CExBusUart(chibios_rt::EvtListener *evtListener, SerialDriver *driver,
-                         const char *threadName) :
-      driver_(driver), serialConfig_( {
-          125000, 0,
-          USART_CR2_STOP_1,
-          USART_CR3_HDSEL}), threadName_(threadName),evt_() {
+  CExBusUart::CExBusUart(SerialDriver *driver, const char *threadName) :
+      driver_(driver), serialConfig_( {125000, 0,
+      USART_CR2_STOP_1,
+                                       USART_CR3_HDSEL}), threadName_(
+          threadName) {
 
     state_ = 0;
     nbExPacket_ = 0;
@@ -30,7 +29,7 @@ namespace ExPowerBox {
     initPacket();
     initTextDesc();
 
-    for (int i = 0; i < servoPosition_.size(); ++i)
+    for (size_t i = 0; i < servoPosition_.size(); ++i)
       servoPosition_[i] = 0;
   }
 
@@ -44,7 +43,7 @@ namespace ExPowerBox {
 
   void CExBusUart::getServoPosition(uint16_t* dest) {
     chSysLock();
-    for (int i = 0; i < servoPosition_.size(); ++i) {
+    for (size_t i = 0; i < servoPosition_.size(); ++i) {
       *dest++ = servoPosition_[i];
     }
     chSysUnlock();
@@ -72,7 +71,7 @@ namespace ExPowerBox {
         if (!nbExValidPacket_) {
           continue;
         }
-        signalEvents(EXBUS_TIMEOUT);
+        evt_.broadcastFlags(EXBUS_TIMEOUT);
       }
 
       if (exDecode(rxData_)) {
@@ -109,7 +108,7 @@ namespace ExPowerBox {
           }
         }
 
-        signalEvents(EXBUS_CRC_ERR);
+        evt_.broadcastFlags(EXBUS_CRC_ERR);
         nbExInvalidPacket_++;
         initPacket();
       }
@@ -119,10 +118,25 @@ namespace ExPowerBox {
   void CExBusUart::processTelemetryRequest() {
     // send the text descriptors only the first 128 requests
     if (nbExTelemetryPktSent_ < 128) {
-      //sdWrite(driver_, static_cast<const uint8_t*>(&telemetryTextPkt_[telemetryTextPktIndex_]), 1);
+      telemetryTextPkt_[telemetryTextPktIndex_].packetId = exPacket_.packetId;
+
+      uint16_t crc = get_crc16(
+          telemetryTextPkt_[telemetryTextPktIndex_].header,
+          telemetryTextPkt_[telemetryTextPktIndex_].pktLen - 2);
+
+      telemetryTextPkt_[telemetryTextPktIndex_].data[telemetryTextPkt_[telemetryTextPktIndex_].dataLength] =
+          crc;
+      telemetryTextPkt_[telemetryTextPktIndex_].data[telemetryTextPkt_[telemetryTextPktIndex_].dataLength
+          + 1] = crc >> 8;
+
+      sdWrite(driver_,
+              (const uint8_t* )&telemetryTextPkt_[telemetryTextPktIndex_],
+              telemetryTextPkt_[telemetryTextPktIndex_].pktLen);
+
       telemetryTextPktIndex_++;
       if (telemetryTextPktIndex_ == telemetryTextPkt_.size())
         telemetryTextPktIndex_ = 0;
+
       nbExTelemetryPktSent_++;
       return;
     }
@@ -200,13 +214,13 @@ namespace ExPowerBox {
   }
 
   void CExBusUart::initPacket() {
-     int8_t *p = (int8_t*)&exPacket_;
+    int8_t *p = (int8_t*)&exPacket_;
 
-     for (int i = 0; i < 4; ++i) {
-       *p++ = 0;
-     }
+    for (int i = 0; i < 4; ++i) {
+      *p++ = 0;
+    }
 
-     state_ = 0;
+    state_ = 0;
   }
 
   void CExBusUart::initTextDesc() {

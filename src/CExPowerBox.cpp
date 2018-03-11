@@ -13,10 +13,9 @@
 
 namespace ExPowerBox {
   CExPowerBox::CExPowerBox() :
-      exBus_ {CExBusUart(nullptr, &SD4, "exBusUart4"), CExBusUart(
-          nullptr, &SD5, "exBusUart5"),
-              CExBusUart(nullptr, &SD6, "exBusUart6")}, sensorAcq_(
-          &SD1, &I2CD1), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
+      exBus_ {CExBusUart(&SD4, "exBusUart4"), CExBusUart(&SD5, "exBusUart5"),
+              CExBusUart(&SD6, "exBusUart6")}, sensorAcq_(&SD1, &I2CD1), pwmDriver_ {
+          &PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
 
     // set initial pwm frequency and period
     updatePwmSettings(2000000UL, 20E-3);
