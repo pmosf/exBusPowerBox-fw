@@ -25,14 +25,16 @@ T5: 4 ch, ch2 disabled
 T12: 2 ch, ch2 disabled
 
 PCB front view, usb at top
-S1 - S8
-S14 - S9
-S13 - S10
-S12 - S16
-S2 - S5
-S11 - S4
-S4 - S15
-S3 - S6
+| left | right
+|------|-------
+|S1    |  S8
+|S14 | S9
+|S13 | S10
+|S12 | S16
+|S2 | S5
+|S11 | S4
+|S4 | S15
+|S3 | S6
 
 EXBUS1: PC10, AF8, UART4
 EXBUS2: PC12, AF8, UART5
