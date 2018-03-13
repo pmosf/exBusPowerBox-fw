@@ -92,6 +92,8 @@ PROJECT = exBusPowerBox
 
 # Imported source files and paths
 CHIBIOS = ../../chibios182
+# Licensing files.
+include $(CHIBIOS)/os/license/license.mk
 # Startup files.
 include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f7xx.mk
 # HAL-OSAL files (optional).
@@ -110,21 +112,16 @@ LDSCRIPT= $(STARTUPLD)/STM32F745VG.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CSRC = $(STARTUPSRC) \
-       $(KERNSRC) \
-       $(PORTSRC) \
-       $(OSALSRC) \
-       $(HALSRC) \
-       $(PLATFORMSRC) \
-       $(BOARDSRC) \
+CSRC = $(ALLCSRC) \
        $(CHIBIOS)/os/various/syscalls.c \
+       $(CHIBIOS)/os/various/evtimer.c \
  		src/crc.c \
  		src/usbcfg.c
  		
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CPPSRC = $(CHCPPSRC) \
+CPPSRC = $(ALLCPPSRC) \
          src/main.cpp \
          src/CExPowerBox.cpp \
          src/CExBus.cpp \
@@ -132,8 +129,7 @@ CPPSRC = $(CHCPPSRC) \
          src/CExSensor.cpp \
          src/CGps.cpp \
          src/CLTC2943.cpp \
-         src/CMAX6639.cpp \
-         src/CSensorAcquisition.cpp
+         src/CMAX6639.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -156,12 +152,10 @@ TCSRC =
 TCPPSRC =
 
 # List ASM source files here
-ASMSRC =
-ASMXSRC = $(STARTUPASM) $(PORTASM) $(OSALASM)
+ASMSRC = $(ALLASMSRC)
+ASMXSRC = $(ALLXASMSRC)
 
-INCDIR = $(CHIBIOS)/os/license \
-         $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
-         $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
+INCDIR = $(ALLINC) $(TESTINC) \
          $(CHCPPINC) $(CHIBIOS)/os/various 
 
 #

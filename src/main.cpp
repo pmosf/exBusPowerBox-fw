@@ -15,9 +15,10 @@ int main(void) {
 
   ExPowerBox::CExPowerBox exPowerBox;
   exPowerBox.start(NORMALPRIO);
+  exPowerBox.wait();
 
   while (true) {
-    chibios_rt::BaseThread::sleep(TIME_MS2I(500));
+    chibios_rt::BaseThread::sleep(TIME_INFINITE);
   }
 
   return 0;

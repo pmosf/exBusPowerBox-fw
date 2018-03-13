@@ -12,29 +12,60 @@
 #include "CGps.hpp"
 
 namespace ExPowerBox {
+
+  event_timer_t CExPowerBox::lowSpeedTimer_;
+  event_timer_t CExPowerBox::highSpeedTimer_;
+  batteryMonitoring_t CExPowerBox::battery_;
+  temperatureMonitoring_t CExPowerBox::temperature_;
+
   CExPowerBox::CExPowerBox() :
       exBus_ {CExBusUart(&SD4, "exBusUart4"), CExBusUart(&SD5, "exBusUart5"),
-              CExBusUart(&SD6, "exBusUart6")}, sensorAcq_(&SD1, &I2CD1), pwmDriver_ {
+              CExBusUart(&SD6, "exBusUart6")}, gps_(&SD1), i2cDriver_(
+          I2C_DRIVER), i2cConfig_(
+          {STM32_TIMINGR_PRESC(3U) |
+          STM32_TIMINGR_SCLDEL(4U) | STM32_TIMINGR_SDADEL(2U) |
+          STM32_TIMINGR_SCLH(0xF) | STM32_TIMINGR_SCLL(0x13)/*0x00303D5D*/,
+           0, 0}), ltc2943_ {LTC2943::CLTC2943(I2C_DRIVER, 1),
+                             LTC2943::CLTC2943(
+                             I2C_DRIVER,
+                                               2)}, max6639_(I2C_DRIVER), pwmDriver_ {
           &PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
-
-    // set initial pwm frequency and period
-    updatePwmSettings(2000000UL, 20E-3);
+    // initialize variables
     // set fail-safe and initial servo values to middle position
     for (int i = 0; i < EX_NB_SERVOS; ++i) {
       servoFailSafePosition_[i] = 1.5E-3 * EX_PWM_FREQ;
       servoPosition_[i] = 0;
     }
-
     // 1st exbus uart is selected by default
     exBusSel_ = 0;
     validEvtReceived_ = false;
+    isExBusLinkUp_ = false;
+
     // initialize timeout counters
     for (int i = 0; i < NB_EX_UART; ++i) {
       nbExBusTimeout_[i] = 0;
       nbTotalExBusTimeout_[i] = 0;
     }
 
+    // set initial pwm frequency and period
+    updatePwmSettings(2000000UL, 20E-3);
     initPwm();
+
+    // intialize I2C peripheral
+    i2cStart(i2cDriver_, &i2cConfig_);
+
+    // initialize LTC2943
+    for (size_t i = 0; i < ltc2943_.size(); ++i) {
+      if (!ltc2943_[i].init()) {
+        i2cDriver_->state = I2C_READY;
+      }
+    }
+
+    // initialize MAX6639
+    if (!max6639_.init()) {
+      i2cDriver_->state = I2C_READY;
+    }
+
 #if 0
     // USB initialization
     sduObjectInit(&serialUsbDriver_);
@@ -66,8 +97,15 @@ namespace ExPowerBox {
       exBus_[i].start(NORMALPRIO);
     }
 
-    // start sensor acquisition thread
-    sensorAcq_.start(NORMALPRIO - 1);
+    // start low-speed sensor acquisition thread
+    chThdCreateStatic(lowSpeedWA, sizeof(lowSpeedWA),
+    NORMALPRIO - 2,
+                      lowAcqThread, &max6639_);
+
+    // start high-speed acquisition thread
+    chThdCreateStatic(highSpeedWA, sizeof(highSpeedWA),
+    NORMALPRIO - 1,
+                      fastAcqThread, &ltc2943_);
 
     while (true) {
       // set servos to fail-safe positions if no activity on exbus uarts
@@ -83,7 +121,7 @@ namespace ExPowerBox {
       // in case of 4 consecutive timeouts, we select another exbus receiver
       if (evt == 0) {
         // wait for one valid event before timeout detection
-        if (!validEvtReceived_)
+        if (!validEvtReceived_ || !isExBusLinkUp_)
           continue;
 
         processExBusTimeout();
@@ -95,6 +133,7 @@ namespace ExPowerBox {
       eventflags_t flags = exBusEvent_[exBusSel_].getAndClearFlags();
 
       if (flags & EXBUS_SERVO_POSITIONS) {
+        isExBusLinkUp_ = true;
         nbExBusTimeout_[exBusSel_] = 0;
         exBus_[exBusSel_].getServoPosition(&servoPosition_[0]);
         updateServoPositions(false);
@@ -102,19 +141,67 @@ namespace ExPowerBox {
       }
 
       if (flags & EXBUS_TELEMETRY) {
+        isExBusLinkUp_ = true;
         nbExBusTimeout_[exBusSel_] = 0;
         continue;
       }
 
       if (flags & EXBUS_JETIBOX) {
+        isExBusLinkUp_ = true;
         nbExBusTimeout_[exBusSel_] = 0;
         continue;
       }
 
       if (flags & EXBUS_TIMEOUT) {
-        processExBusTimeout();
+        if (isExBusLinkUp_)
+          processExBusTimeout();
         continue;
       }
+    }
+  }
+
+  __attribute__((noreturn))
+  void CExPowerBox::fastAcqThread(void* arg) {
+    chRegSetThreadName("HSpeedAcq");
+
+    std::array<LTC2943::CLTC2943, NB_BAT> driver = *static_cast<std::array<
+        LTC2943::CLTC2943, NB_BAT>*>(arg);
+    event_listener_t el;
+
+    evtObjectInit(&lowSpeedTimer_, TIME_MS2I(500));
+
+    chEvtRegisterMask((event_source_t*)&lowSpeedTimer_.et_es, &el,
+    EVENT_HSA_TIMER);
+
+    evtStart(&lowSpeedTimer_);
+
+    while (TRUE) {
+      chEvtWaitAny(EVENT_HSA_TIMER);
+      battery_.m.lock();
+      for (size_t i = 0; i < driver.size(); ++i) {
+        battery_.voltage[i] = driver[i].GetVoltage();
+        battery_.current[i] = driver[i].GetCurrent();
+      }
+      battery_.m.unlock();
+    }
+  }
+
+  __attribute__((noreturn))
+  void CExPowerBox::lowAcqThread(void* arg) {
+    chRegSetThreadName("LSpeedAcq");
+
+    MAX6639::CMAX6639 *driver = static_cast<MAX6639::CMAX6639*>(arg);
+    event_listener_t el;
+
+    evtObjectInit(&highSpeedTimer_, TIME_S2I(2));
+
+    chEvtRegisterMask((event_source_t*)&highSpeedTimer_.et_es, &el,
+    EVENT_LSA_TIMER);
+
+    evtStart(&highSpeedTimer_);
+
+    while (TRUE) {
+      chEvtWaitAny(EVENT_LSA_TIMER);
     }
   }
 
