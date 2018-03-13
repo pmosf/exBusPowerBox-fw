@@ -39,3 +39,14 @@ PCB front view, usb at top
 EXBUS1: PC10, AF8, UART4
 EXBUS2: PC12, AF8, UART5
 EXBUS3: PC6, AF8, UART6
+
+low-speed sensor acquisition thread
+0.5Hz
+temperatures
+battery capacity
+
+high-speed sensor acquisition thread
+2Hz
+battery voltage
+battery current
+gps
