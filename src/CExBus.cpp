@@ -9,14 +9,16 @@
 #include "hal.h"
 #include "CExBus.hpp"
 #include "crc.h"
+#include "usbcfg.h"
 
 namespace ExPowerBox {
 
-  CExBusUart::CExBusUart(SerialDriver *driver, const char *threadName) :
+  CExBusUart::CExBusUart(SerialDriver *driver, const char *threadName,
+                         Jeti::Device::CExDevice *exDevice) :
       driver_(driver), serialConfig_( {125000, 0,
       USART_CR2_STOP_1,
                                        USART_CR3_HDSEL}), threadName_(
-          threadName) {
+          threadName), exDevice_(exDevice) {
 
     state_ = 0;
     nbExPacket_ = 0;
@@ -27,10 +29,6 @@ namespace ExPowerBox {
     telemetryTextPktIndex_ = 0;
     telemetryDataPktIndex_ = 0;
     telemetryDataPktArraySize_ = 0;
-
-    initPacket();
-    initTextDesc();
-    initDataDesc();
 
     for (size_t i = 0; i < servoPosition_.size(); ++i)
       servoPosition_[i] = 0;
@@ -63,6 +61,9 @@ namespace ExPowerBox {
     setName(threadName_);
 
     sdStart(driver_, &serialConfig_);
+    initPacket();
+    initTextDesc();
+    initDataDesc();
 
     while (true) {
       size_t n = chnReadTimeout((BaseChannel * )driver_, &rxData_, 1,
@@ -147,16 +148,16 @@ namespace ExPowerBox {
     telemetryDataPkt_.packetId = exPacket_.packetId;
 
     for (int i = 0;
-        i < (exDevice_.getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
+        i < (exDevice_->getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
         ++i) {
       // 0x7E separator is skipped
-      telemetryDataPkt_.data[i] = exDevice_.getDataDescriptor(
+      telemetryDataPkt_.data[i] = exDevice_->getDataDescriptor(
           telemetryDataPktIndex_)[i + 1];
     }
 
     telemetryDataPkt_.pktLen = 8
-        + (exDevice_.getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
-    telemetryDataPkt_.dataLength = (exDevice_.getDataDescriptor(
+        + (exDevice_->getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
+    telemetryDataPkt_.dataLength = (exDevice_->getDataDescriptor(
         telemetryDataPktIndex_)[3] & 31) + 2;
 
     uint16_t crc = get_crc16(telemetryDataPkt_.header,
@@ -168,8 +169,11 @@ namespace ExPowerBox {
     sdWrite(driver_, (const uint8_t* )&telemetryDataPkt_,
             telemetryDataPkt_.pktLen);
 
+    chnWrite(&PORTAB_SDU1, (const uint8_t* )&telemetryDataPkt_, telemetryDataPkt_.pktLen);
+    chnWrite(&PORTAB_SDU1, (const uint8_t* )"toto", 4);
+
     telemetryDataPktIndex_++;
-    if (telemetryDataPktIndex_ == exDevice_.getDataDescCollectionSize())
+    if (telemetryDataPktIndex_ == exDevice_->getDataDescCollectionSize())
       telemetryDataPktIndex_ = 0;
 
     nbExTelemetryPktSent_++;
@@ -269,18 +273,18 @@ namespace ExPowerBox {
     // create telemetry text packet for device
     telemetryTextPkt_[0].header[0] = 0x3B;
     telemetryTextPkt_[0].header[1] = 0x01;
-    telemetryTextPkt_[0].pktLen = 8 + exDevice_.getTextDescriptorSize() - 1; // 0x7E separator is not sent
+    telemetryTextPkt_[0].pktLen = 8 + exDevice_->getTextDescriptorSize() - 1; // 0x7E separator is not sent
     telemetryTextPkt_[0].packetId = 0;
     telemetryTextPkt_[0].dataId = 0x3A;
-    telemetryTextPkt_[0].dataLength = exDevice_.getTextDescriptorSize() - 1;
+    telemetryTextPkt_[0].dataLength = exDevice_->getTextDescriptorSize() - 1;
 
-    for (size_t i = 0; i < exDevice_.getTextDescriptorSize() - 1; ++i) {
-      telemetryTextPkt_[0].data[i] = exDevice_.getTextDescriptor()[i + 1]; // 0x7E separator is skipped
+    for (size_t i = 0; i < exDevice_->getTextDescriptorSize() - 1; ++i) {
+      telemetryTextPkt_[0].data[i] = exDevice_->getTextDescriptor()[i + 1]; // 0x7E separator is skipped
     }
 
     // initialize telemetry text packet for device's sensors
     int idx = 1;
-    for (auto& s : exDevice_.getSensorCollection()) {
+    for (auto& s : exDevice_->getSensorCollection()) {
       telemetryTextPkt_[idx].header[0] = 0x3B;
       telemetryTextPkt_[idx].header[1] = 0x01;
       telemetryTextPkt_[idx].pktLen = 8 + s.getTextDescriptorSize() - 1; // 0x7E separator is not sent

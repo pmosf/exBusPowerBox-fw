@@ -37,6 +37,8 @@ namespace Jeti {
       text_[idx] = get_crc8(&text_[2], idx - 2);
 
       textDescSize_ = idx + 1;
+
+      formattedValueSize_ = 0;
     }
 
     CExSensor::~CExSensor() {
@@ -50,15 +52,15 @@ namespace Jeti {
       return textDescSize_;
     }
 
-    const uint8_t& CExSensor::getId() const {
+    uint8_t& CExSensor::getId() {
       return id_;
     }
 
-    const DataType& CExSensor::getDataType() const {
+    DataType& CExSensor::getDataType() {
       return dataType_;
     }
 
-    const std::string& CExSensor::getName() const {
+    std::string& CExSensor::getName() {
       return name_;
     }
 

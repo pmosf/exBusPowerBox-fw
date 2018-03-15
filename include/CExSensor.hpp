@@ -3,6 +3,9 @@
 #include <string>
 #include <array>
 
+#include <hal.h>
+#include <ch.hpp>
+
 #define JETI_EX_ID_CHANNEL			0x31
 #define JETI_EX_ID_TELEMETRY		0x3A
 #define JETI_EX_ID_JETIBOX			0x3B
@@ -32,42 +35,42 @@
 
 namespace Jeti {
   namespace Sensor {
-    enum class Type
-      : int {
-        voltage = 1,
-      current,
-      temperature,
-      gps
-    };
-    enum class DataType
-      : uint8_t
-      {
-        int6 = 0,
-      int14 = 1,
-      int22 = 4,
-      timeDate = 5,
-      int30 = 8,
-      gps = 9
-    };
+      enum class Type
+        : int {
+          voltage = 1,
+        current,
+        temperature,
+        gps
+      };
+      enum class DataType
+        : uint8_t
+        {
+          int6 = 0,
+        int14 = 1,
+        int22 = 4,
+        timeDate = 5,
+        int30 = 8,
+        gps = 9
+      };
 
-    typedef struct {
-        struct {
-            uint8_t degree;
-            uint32_t minute;
-            char hemisphere;
-        } longitude;
-        struct {
-            uint8_t degree;
-            uint32_t minute;
-            char hemisphere;
-        } latitude;
-    } gps_t;
+      typedef struct _gps {
+          struct {
+              uint8_t degree;
+              uint32_t minute;
+              char hemisphere;
+          } longitude;
+          struct {
+              uint8_t degree;
+              uint32_t minute;
+              char hemisphere;
+          } latitude;
+      } gps_t;
 
-    typedef struct {
-        uint8_t dataType;
-        uint8_t id;
-        uint8_t *formattedValue;
-    } data_desc_t;
+      typedef struct _data_desc {
+          uint8_t dataType;
+          uint8_t id;
+          uint8_t *formattedValue;
+      } data_desc_t;
 
     class CExSensor {
       public:
@@ -78,9 +81,9 @@ namespace Jeti {
         virtual ~CExSensor();
         std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE>& getTextDescriptor();
         uint8_t& getTextDescriptorSize();
-        const uint8_t& getId() const;
-        const DataType& getDataType() const;
-        const std::string& getName() const;
+        uint8_t& getId();
+        DataType& getDataType();
+        std::string& getName();
         void setFormattedValuePtr(uint8_t *p);
         int getFormattedValueSize();
         virtual void setValue(float val);
@@ -98,6 +101,7 @@ namespace Jeti {
         uint8_t *formattedValue_;
         int formattedValueSize_;
         int precision_;
+        chibios_rt::Mutex mutex_;
     };
 
     class CExVoltageSensor: public CExSensor {

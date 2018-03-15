@@ -156,7 +156,7 @@ ASMSRC = $(ALLASMSRC)
 ASMXSRC = $(ALLXASMSRC)
 
 INCDIR = $(ALLINC) $(TESTINC) \
-         $(CHCPPINC) $(CHIBIOS)/os/various 
+         $(CHCPPINC) $(CHIBIOS)/os/various
 
 #
 # Project, sources and paths

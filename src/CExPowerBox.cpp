@@ -10,21 +10,26 @@
 #include "CExPowerBox.hpp"
 #include "CExBus.hpp"
 #include "CGps.hpp"
+#include "usbcfg.h"
 
 namespace ExPowerBox {
 
   event_timer_t CExPowerBox::lowSpeedTimer_;
   event_timer_t CExPowerBox::highSpeedTimer_;
-  I2CDriver *CExPowerBox::i2cDriver_ = &I2CD1;
+  I2CDriver *CExPowerBox::i2cDriver_ = I2C_DRIVER;
   std::array<LTC2943::CLTC2943, NB_BAT> CExPowerBox::ltc2943_ = {
       LTC2943::CLTC2943(i2cDriver_, 1), LTC2943::CLTC2943(i2cDriver_, 2)};
   MAX6639::CMAX6639 CExPowerBox::max6639_(i2cDriver_);
-  batteryMonitoring_t CExPowerBox::battery_;
-  temperatureMonitoring_t CExPowerBox::temp_;
+  Jeti::Device::CExDevice CExPowerBox::exDevice_;
+  CExBusUart CExPowerBox::exBus_[NB_EX_UART] = {CExBusUart(&SD4, "exBusUart4",
+                                                           &exDevice_),
+                                                CExBusUart(&SD5, "exBusUart5",
+                                                           &exDevice_),
+                                                CExBusUart(&SD6, "exBusUart6",
+                                                           &exDevice_)};
 
   CExPowerBox::CExPowerBox() :
-      exBus_ {CExBusUart(&SD4, "exBusUart4"), CExBusUart(&SD5, "exBusUart5"),
-              CExBusUart(&SD6, "exBusUart6")}, gps_(&SD1), i2cConfig_(
+      gps_(&SD1), i2cConfig_(
           {STM32_TIMINGR_PRESC(3U) |
           STM32_TIMINGR_SCLDEL(4U) | STM32_TIMINGR_SDADEL(2U) |
           STM32_TIMINGR_SCLH(0xF) | STM32_TIMINGR_SCLL(0x13)/*0x00303D5D*/,
@@ -65,19 +70,19 @@ namespace ExPowerBox {
       i2cDriver_->state = I2C_READY;
     }
 
-#if 0
+#if 1
     // USB initialization
-    sduObjectInit(&serialUsbDriver_);
-    sduStart(&serialUsbDriver_, &serialUsbCfg_);
+    sduObjectInit(&PORTAB_SDU1);
+    sduStart(&PORTAB_SDU1, &serusbcfg);
     /*
      * Activates the USB driver and then the USB bus pull-up on D+.
      * Note, a delay is inserted in order to not have to disconnect the cable
      * after a reset.
      */
-    usbDisconnectBus(serialUsbCfg_.usbp);
+    usbDisconnectBus(serusbcfg.usbp);
     chThdSleepMilliseconds(1500);
-    usbStart(serialUsbCfg_.usbp, &usbCfg_);
-    usbConnectBus(serialUsbCfg_.usbp);
+    usbStart(serusbcfg.usbp, &usbcfg);
+    usbConnectBus(serusbcfg.usbp);
 #endif
   }
 
@@ -88,6 +93,8 @@ namespace ExPowerBox {
   __attribute__((noreturn))
   void CExPowerBox::main() {
     setName("ExPowerBox");
+
+    exDevice_.init();
 
     // register exbus events and start threads
     for (int i = 0; i < NB_EX_UART; ++i) {
@@ -179,12 +186,14 @@ namespace ExPowerBox {
 
     while (TRUE) {
       chEvtWaitAny(EVENT_HSA_TIMER);
-      battery_.m.lock();
-      for (size_t i = 0; i < ltc2943_.size(); ++i) {
-        battery_.voltage[i] = ltc2943_[i].GetVoltage();
-        battery_.current[i] = ltc2943_[i].GetCurrent();
-      }
-      battery_.m.unlock();
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE1)->setValue(
+          ltc2943_[0].GetVoltage());
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE2)->setValue(
+          ltc2943_[1].GetVoltage());
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT1)->setValue(
+          ltc2943_[0].GetCurrent());
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT2)->setValue(
+          ltc2943_[1].GetCurrent());
     }
   }
 
@@ -204,11 +213,16 @@ namespace ExPowerBox {
 
     while (TRUE) {
       chEvtWaitAny(EVENT_LSA_TIMER);
-      temp_.m.lock();
-      temp_.local = ltc2943_[0].GetTemperature();
-      temp_.ext[0] = max6639_.GetExtTemperature(0);
-      temp_.ext[1] = max6639_.GetExtTemperature(1);
-      temp_.m.unlock();
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setValue(
+          ltc2943_[0].GetCapacity());
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY2)->setValue(
+          ltc2943_[1].GetCapacity());
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::T_LOCAL)->setValue(
+          ltc2943_[0].GetTemperature());
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT1)->setValue(
+          max6639_.GetExtTemperature(0));
+      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT2)->setValue(
+          max6639_.GetExtTemperature(1));
     }
   }
 
@@ -309,7 +323,7 @@ namespace ExPowerBox {
     0, 0};
 
   // TIM9
-  pwmConfig_[3] = {pwmSettings_.freq,
+  pwmConfig_[4] = {pwmSettings_.freq,
     pwmSettings_.periodTick,
     nullptr, /* No callback */
     { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
@@ -321,7 +335,7 @@ namespace ExPowerBox {
     0, 0};
 
   // TIM12
-  pwmConfig_[4] = {pwmSettings_.freq,
+  pwmConfig_[5] = {pwmSettings_.freq,
     pwmSettings_.periodTick,
     nullptr, /* No callback */
     { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
