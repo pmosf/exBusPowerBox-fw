@@ -28,14 +28,16 @@
 
 namespace ExPowerBox {
 
-  typedef struct {
-      std::uint8_t header[2];
-      std::uint8_t pktLen;
-      std::uint8_t packetId;
-      std::uint8_t dataId;
-      std::uint8_t dataLength;
-      std::uint8_t data[58];
-  } packet_t;
+  namespace {
+    typedef struct {
+        std::uint8_t header[2];
+        std::uint8_t pktLen;
+        std::uint8_t packetId;
+        std::uint8_t dataId;
+        std::uint8_t dataLength;
+        std::uint8_t data[58];
+    } packet_t;
+  }
 
   class CExBusUart: public chibios_rt::BaseStaticThread<128> {
     public:
@@ -45,6 +47,7 @@ namespace ExPowerBox {
       chibios_rt::EvtSource* getEvent();
       void getServoPosition(uint16_t* dest);
       uint16_t getServoPosition(int ch);
+
 
     private:
       Jeti::Device::CExDevice exDevice_;
@@ -57,6 +60,8 @@ namespace ExPowerBox {
       std::array<packet_t, EX_NB_SENSORS + 1> telemetryTextPkt_ __attribute__((aligned(4)));
       uint8_t telemetryTextPktIndex_;
       packet_t telemetryDataPkt_ __attribute__((aligned(4)));
+      uint8_t telemetryDataPktIndex_;
+      uint8_t telemetryDataPktArraySize_;
       uint32_t nbExPacket_;
       uint32_t nbExValidPacket_;
       uint32_t nbExInvalidPacket_;
@@ -68,6 +73,7 @@ namespace ExPowerBox {
       bool exDecode(int8_t data);
       void initPacket();
       void initTextDesc();
+      void initDataDesc();
       bool checkCRC();
       void setServoPositionValues();
       void processTelemetryRequest();

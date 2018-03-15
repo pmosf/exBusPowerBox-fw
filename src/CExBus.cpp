@@ -25,9 +25,12 @@ namespace ExPowerBox {
     isClassInitialized_ = false;
     nbExTelemetryPktSent_ = 0;
     telemetryTextPktIndex_ = 0;
+    telemetryDataPktIndex_ = 0;
+    telemetryDataPktArraySize_ = 0;
 
     initPacket();
     initTextDesc();
+    initDataDesc();
 
     for (size_t i = 0; i < servoPosition_.size(); ++i)
       servoPosition_[i] = 0;
@@ -140,6 +143,36 @@ namespace ExPowerBox {
       nbExTelemetryPktSent_++;
       return;
     }
+
+    telemetryDataPkt_.packetId = exPacket_.packetId;
+
+    for (int i = 0;
+        i < (exDevice_.getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
+        ++i) {
+      // 0x7E separator is skipped
+      telemetryDataPkt_.data[i] = exDevice_.getDataDescriptor(
+          telemetryDataPktIndex_)[i + 1];
+    }
+
+    telemetryDataPkt_.pktLen = 8
+        + (exDevice_.getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
+    telemetryDataPkt_.dataLength = (exDevice_.getDataDescriptor(
+        telemetryDataPktIndex_)[3] & 31) + 2;
+
+    uint16_t crc = get_crc16(telemetryDataPkt_.header,
+                             telemetryDataPkt_.pktLen - 2);
+
+    telemetryDataPkt_.data[telemetryDataPkt_.dataLength] = crc;
+    telemetryDataPkt_.data[telemetryDataPkt_.dataLength + 1] = crc >> 8;
+
+    sdWrite(driver_, (const uint8_t* )&telemetryDataPkt_,
+            telemetryDataPkt_.pktLen);
+
+    telemetryDataPktIndex_++;
+    if (telemetryDataPktIndex_ == exDevice_.getDataDescCollectionSize())
+      telemetryDataPktIndex_ = 0;
+
+    nbExTelemetryPktSent_++;
   }
 
   void CExBusUart::processJetiBoxRequest() {
@@ -223,6 +256,15 @@ namespace ExPowerBox {
     state_ = 0;
   }
 
+  void CExBusUart::initDataDesc() {
+    // initialize telemetry data packet
+    telemetryDataPkt_.header[0] = 0x3B;
+    telemetryDataPkt_.header[1] = 0x01;
+    telemetryDataPkt_.pktLen = 0;
+    telemetryDataPkt_.packetId = 0;
+    telemetryDataPkt_.dataId = 0x3A;
+  }
+
   void CExBusUart::initTextDesc() {
     // create telemetry text packet for device
     telemetryTextPkt_[0].header[0] = 0x3B;
@@ -251,12 +293,5 @@ namespace ExPowerBox {
       }
       idx++;
     }
-
-    // initialize telemetry data packet
-    telemetryDataPkt_.header[0] = 0x3B;
-    telemetryDataPkt_.header[1] = 0x01;
-    telemetryDataPkt_.pktLen = 0;
-    telemetryDataPkt_.packetId = 0;
-    telemetryDataPkt_.dataId = 0x3A;
   }
 } /* namespace ExPowerBox */

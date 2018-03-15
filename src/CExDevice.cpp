@@ -28,13 +28,13 @@ namespace Jeti {
          Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
                                       CExDevice::deviceId_, 9, "T Ext2")};
 
-/*    const std::map<const char*, const Sensor::CExSensor*> CExDevice::sensorMap_ = {
-        {"V Bat1", &sensorCollection_[0]}, {"V Bat2", &sensorCollection_[1]}, {
-            "I Bat1", &sensorCollection_[2]},
-        {"I Bat1", &sensorCollection_[3]}, {"C Bat1", &sensorCollection_[4]}, {
-            "C Bat1", &sensorCollection_[5]},
-        {"T Local", &sensorCollection_[6]}, {"T Ext1", &sensorCollection_[7]}, {
-            "T Ext2", &sensorCollection_[8]}};*/
+    /*    const std::map<const char*, const Sensor::CExSensor*> CExDevice::sensorMap_ = {
+     {"V Bat1", &sensorCollection_[0]}, {"V Bat2", &sensorCollection_[1]}, {
+     "I Bat1", &sensorCollection_[2]},
+     {"I Bat1", &sensorCollection_[3]}, {"C Bat1", &sensorCollection_[4]}, {
+     "C Bat1", &sensorCollection_[5]},
+     {"T Local", &sensorCollection_[6]}, {"T Ext1", &sensorCollection_[7]}, {
+     "T Ext2", &sensorCollection_[8]}};*/
 
     CExDevice::CExDevice() {
 
@@ -153,8 +153,12 @@ namespace Jeti {
       return dataPkt_[index];
     }
 
-    std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& CExDevice::getDataDescriptor() {
+    std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& CExDevice::getDataDescriptorCollection() {
       return dataPkt_;
+    }
+
+    uint8_t CExDevice::getDataDescCollectionSize() {
+      return dataPktIndex_ + 1;
     }
 
     std::array<Sensor::CExSensor, EX_NB_SENSORS>& CExDevice::getSensorCollection() {
@@ -167,11 +171,11 @@ namespace Jeti {
 
     const Sensor::CExSensor* CExDevice::getSensor(const std::string& name) {
       /*const std::map<const char*, const Sensor::CExSensor*>::iterator it =
-          sensorMap_.find(name.c_str());
-      if (it != sensorMap_.end())
-        return it->second;
-      else*/
-        return nullptr;
+       sensorMap_.find(name.c_str());
+       if (it != sensorMap_.end())
+       return it->second;
+       else*/
+      return nullptr;
     }
 
     void CExDevice::AddDescLengthCRC() {

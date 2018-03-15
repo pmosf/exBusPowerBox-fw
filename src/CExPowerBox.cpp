@@ -15,21 +15,20 @@ namespace ExPowerBox {
 
   event_timer_t CExPowerBox::lowSpeedTimer_;
   event_timer_t CExPowerBox::highSpeedTimer_;
+  I2CDriver *CExPowerBox::i2cDriver_ = &I2CD1;
+  std::array<LTC2943::CLTC2943, NB_BAT> CExPowerBox::ltc2943_ = {
+      LTC2943::CLTC2943(i2cDriver_, 1), LTC2943::CLTC2943(i2cDriver_, 2)};
+  MAX6639::CMAX6639 CExPowerBox::max6639_(i2cDriver_);
   batteryMonitoring_t CExPowerBox::battery_;
-  temperatureMonitoring_t CExPowerBox::temperature_;
+  temperatureMonitoring_t CExPowerBox::temp_;
 
   CExPowerBox::CExPowerBox() :
       exBus_ {CExBusUart(&SD4, "exBusUart4"), CExBusUart(&SD5, "exBusUart5"),
-              CExBusUart(&SD6, "exBusUart6")}, gps_(&SD1), i2cDriver_(
-          I2C_DRIVER), i2cConfig_(
+              CExBusUart(&SD6, "exBusUart6")}, gps_(&SD1), i2cConfig_(
           {STM32_TIMINGR_PRESC(3U) |
           STM32_TIMINGR_SCLDEL(4U) | STM32_TIMINGR_SDADEL(2U) |
           STM32_TIMINGR_SCLH(0xF) | STM32_TIMINGR_SCLL(0x13)/*0x00303D5D*/,
-           0, 0}), ltc2943_ {LTC2943::CLTC2943(I2C_DRIVER, 1),
-                             LTC2943::CLTC2943(
-                             I2C_DRIVER,
-                                               2)}, max6639_(I2C_DRIVER), pwmDriver_ {
-          &PWMD1, &PWMD2, &PWMD3, &PWMD5, &PWMD12} {
+           0, 0}), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD8, &PWMD9, &PWMD12} {
     // initialize variables
     // set fail-safe and initial servo values to middle position
     for (int i = 0; i < EX_NB_SERVOS; ++i) {
@@ -100,12 +99,12 @@ namespace ExPowerBox {
     // start low-speed sensor acquisition thread
     chThdCreateStatic(lowSpeedWA, sizeof(lowSpeedWA),
     NORMALPRIO - 2,
-                      lowAcqThread, &max6639_);
+                      lowAcqThread, nullptr);
 
     // start high-speed acquisition thread
     chThdCreateStatic(highSpeedWA, sizeof(highSpeedWA),
     NORMALPRIO - 1,
-                      fastAcqThread, &ltc2943_);
+                      fastAcqThread, nullptr);
 
     while (true) {
       // set servos to fail-safe positions if no activity on exbus uarts
@@ -141,8 +140,7 @@ namespace ExPowerBox {
       }
 
       if (flags & EXBUS_TELEMETRY) {
-        isExBusLinkUp_ = true;
-        nbExBusTimeout_[exBusSel_] = 0;
+        updateTelemetryValues();
         continue;
       }
 
@@ -160,12 +158,16 @@ namespace ExPowerBox {
     }
   }
 
+  void CExPowerBox::updateTelemetryValues() {
+    isExBusLinkUp_ = true;
+    nbExBusTimeout_[exBusSel_] = 0;
+  }
+
   __attribute__((noreturn))
   void CExPowerBox::fastAcqThread(void* arg) {
     chRegSetThreadName("HSpeedAcq");
 
-    std::array<LTC2943::CLTC2943, NB_BAT> driver = *static_cast<std::array<
-        LTC2943::CLTC2943, NB_BAT>*>(arg);
+    (void)arg;
     event_listener_t el;
 
     evtObjectInit(&lowSpeedTimer_, TIME_MS2I(500));
@@ -178,9 +180,9 @@ namespace ExPowerBox {
     while (TRUE) {
       chEvtWaitAny(EVENT_HSA_TIMER);
       battery_.m.lock();
-      for (size_t i = 0; i < driver.size(); ++i) {
-        battery_.voltage[i] = driver[i].GetVoltage();
-        battery_.current[i] = driver[i].GetCurrent();
+      for (size_t i = 0; i < ltc2943_.size(); ++i) {
+        battery_.voltage[i] = ltc2943_[i].GetVoltage();
+        battery_.current[i] = ltc2943_[i].GetCurrent();
       }
       battery_.m.unlock();
     }
@@ -190,7 +192,7 @@ namespace ExPowerBox {
   void CExPowerBox::lowAcqThread(void* arg) {
     chRegSetThreadName("LSpeedAcq");
 
-    MAX6639::CMAX6639 *driver = static_cast<MAX6639::CMAX6639*>(arg);
+    (void)arg;
     event_listener_t el;
 
     evtObjectInit(&highSpeedTimer_, TIME_S2I(2));
@@ -202,6 +204,11 @@ namespace ExPowerBox {
 
     while (TRUE) {
       chEvtWaitAny(EVENT_LSA_TIMER);
+      temp_.m.lock();
+      temp_.local = ltc2943_[0].GetTemperature();
+      temp_.ext[0] = max6639_.GetExtTemperature(0);
+      temp_.ext[1] = max6639_.GetExtTemperature(1);
+      temp_.m.unlock();
     }
   }
 
@@ -289,15 +296,27 @@ namespace ExPowerBox {
         nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
     0, 0};
 
-  // TIM5
+  // TIM8
   pwmConfig_[3] = {pwmSettings_.freq,
     pwmSettings_.periodTick,
     nullptr, /* No callback */
     { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
         PWM_OUTPUT_DISABLED,
         nullptr},
-      { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
+      { PWM_OUTPUT_DISABLED, nullptr}, {
+        PWM_OUTPUT_DISABLED,
+        nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
+    0, 0};
+
+  // TIM9
+  pwmConfig_[3] = {pwmSettings_.freq,
+    pwmSettings_.periodTick,
+    nullptr, /* No callback */
+    { { PWM_OUTPUT_ACTIVE_HIGH, nullptr}, {
         PWM_OUTPUT_ACTIVE_HIGH,
+        nullptr},
+      { PWM_OUTPUT_DISABLED, nullptr}, {
+        PWM_OUTPUT_DISABLED,
         nullptr}, {PWM_OUTPUT_DISABLED, nullptr}, {PWM_OUTPUT_DISABLED, nullptr}},
     0, 0};
 

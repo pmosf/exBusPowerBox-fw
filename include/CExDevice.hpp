@@ -29,7 +29,8 @@ namespace Jeti {
         const std::array<uint8_t, EX_MAX_PKT_LEN>& getTextDescriptor();
         uint8_t getTextDescriptorSize();
         const std::array<uint8_t, EX_MAX_PKT_LEN>& getDataDescriptor(int index);
-        std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& getDataDescriptor();
+        std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& getDataDescriptorCollection();
+        uint8_t getDataDescCollectionSize();
         std::array<Sensor::CExSensor, EX_NB_SENSORS>& getSensorCollection();
         const Sensor::CExSensor* getSensor(int index);
         const Sensor::CExSensor* getSensor(const std::string& name);

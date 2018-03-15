@@ -21,7 +21,7 @@
 
 #define NB_BAT              2
 #define NB_EX_UART          3
-#define NB_TIM_PWM          5
+#define NB_TIM_PWM          6
 #define EX_PWM_FREQ         8000000UL
 #define EX_MANUFACTURER_ID  0xA400
 #define EX_DEVICE_ID        0
@@ -36,25 +36,27 @@
 
 namespace ExPowerBox {
 
-  typedef struct {
-      uint32_t freq;
-      uint32_t periodTick;
-      float period;
-      uint32_t widthDivider;
-  } pwm_settings_t;
+  namespace {
+    typedef struct {
+        uint32_t freq;
+        uint32_t periodTick;
+        float period;
+        uint32_t widthDivider;
+    } pwm_settings_t;
 
-  typedef struct {
-      float voltage[NB_BAT];
-      float current[NB_BAT];
-      float capacity[NB_BAT];
-      chibios_rt::Mutex m;
-  } batteryMonitoring_t;
+    typedef struct {
+        float voltage[NB_BAT];
+        float current[NB_BAT];
+        float capacity[NB_BAT];
+        chibios_rt::Mutex m;
+    } batteryMonitoring_t;
 
-  typedef struct {
-      float local;
-      float ext[2];
-      chibios_rt::Mutex m;
-  } temperatureMonitoring_t;
+    typedef struct {
+        float local;
+        float ext[2];
+        chibios_rt::Mutex m;
+    } temperatureMonitoring_t;
+  }
 
   class CExPowerBox: public chibios_rt::BaseStaticThread<512> {
     public:
@@ -66,20 +68,21 @@ namespace ExPowerBox {
       void initPwm();
       void updateServoPositions(bool failSafe);
       void updatePwmSettings(uint32_t freq, float period);
+      void updateTelemetryValues();
       void processExBusTimeout();
       static void fastAcqThread(void *arg);
       static void lowAcqThread(void *arg);
 
       CExBusUart exBus_[NB_EX_UART];
       GPS::CGps gps_;
-      I2CDriver *i2cDriver_;
-      I2CConfig i2cConfig_;
-      std::array<LTC2943::CLTC2943, NB_BAT> ltc2943_;
-      MAX6639::CMAX6639 max6639_;THD_WORKING_AREA(lowSpeedWA, 512);THD_WORKING_AREA(highSpeedWA, 512);
+      static I2CDriver *i2cDriver_;
+      I2CConfig i2cConfig_;THD_WORKING_AREA(lowSpeedWA, 512);THD_WORKING_AREA(highSpeedWA, 512);
       static event_timer_t lowSpeedTimer_;
       static event_timer_t highSpeedTimer_;
+      static std::array<LTC2943::CLTC2943, NB_BAT> ltc2943_;
+      static MAX6639::CMAX6639 max6639_;
       static batteryMonitoring_t battery_;
-      static temperatureMonitoring_t temperature_;
+      static temperatureMonitoring_t temp_;
       chibios_rt::EvtListener exBusEvent_[NB_EX_UART];
       std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
       std::array<uint16_t, EX_NB_SERVOS> servoFailSafePosition_;
