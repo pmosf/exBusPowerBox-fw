@@ -105,8 +105,8 @@ namespace ExPowerBox {
             continue;
           }
           else if (exPacket_.dataId == JETI_EX_ID_JETIBOX) {
-            processJetiBoxRequest();
-            evt_.broadcastFlags(JETI_EX_ID_JETIBOX);
+            //processJetiBoxRequest();
+            evt_.broadcastFlags(EXBUS_JETIBOX);
             initPacket();
             continue;
           }
@@ -117,6 +117,14 @@ namespace ExPowerBox {
         initPacket();
       }
     }
+  }
+
+  void CExBusUart::sendJetibox(packet_t *p) {
+    p->packetId = exPacket_.packetId;
+    uint16_t crc = get_crc16(p->header, p->pktLen - 2);
+    p->data[p->dataLength] = crc;
+    p->data[p->dataLength + 1] = crc >> 8;
+    sdWrite(driver_, (const uint8_t* )p, p->pktLen);
   }
 
   void CExBusUart::processTelemetryRequest() {
@@ -147,18 +155,20 @@ namespace ExPowerBox {
 
     telemetryDataPkt_.packetId = exPacket_.packetId;
 
+    // 0x7E separator is skipped, crc8 is updated in getDataDescriptor method
+    chSysLock();
+    uint8_t *desc = &(exDevice_->getDataDescriptor(telemetryDataPktIndex_)[1]);
     for (int i = 0;
-        i < (exDevice_->getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
-        ++i) {
-      // 0x7E separator is skipped
-      telemetryDataPkt_.data[i] = exDevice_->getDataDescriptor(
-          telemetryDataPktIndex_)[i + 1];
+        i < exDevice_->getDataDescriptorSize(telemetryDataPktIndex_) - 1; ++i) {
+      telemetryDataPkt_.data[i] = desc[i];
     }
+    chSysUnlock();
 
     telemetryDataPkt_.pktLen = 8
-        + (exDevice_->getDataDescriptor(telemetryDataPktIndex_)[3] & 31) + 2;
-    telemetryDataPkt_.dataLength = (exDevice_->getDataDescriptor(
-        telemetryDataPktIndex_)[3] & 31) + 2;
+        + exDevice_->getDataDescriptorSize(telemetryDataPktIndex_) - 1;
+
+    telemetryDataPkt_.dataLength = exDevice_->getDataDescriptorSize(
+        telemetryDataPktIndex_) - 1;
 
     uint16_t crc = get_crc16(telemetryDataPkt_.header,
                              telemetryDataPkt_.pktLen - 2);
@@ -169,18 +179,14 @@ namespace ExPowerBox {
     sdWrite(driver_, (const uint8_t* )&telemetryDataPkt_,
             telemetryDataPkt_.pktLen);
 
-    chnWrite(&PORTAB_SDU1, (const uint8_t* )&telemetryDataPkt_, telemetryDataPkt_.pktLen);
-    chnWrite(&PORTAB_SDU1, (const uint8_t* )"toto", 4);
+    //chnWrite(&PORTAB_SDU1, (const uint8_t* )&telemetryDataPkt_, telemetryDataPkt_.pktLen);
+    //chnWrite(&PORTAB_SDU1, (const uint8_t* )"toto", 4);
 
     telemetryDataPktIndex_++;
     if (telemetryDataPktIndex_ == exDevice_->getDataDescCollectionSize())
       telemetryDataPktIndex_ = 0;
 
     nbExTelemetryPktSent_++;
-  }
-
-  void CExBusUart::processJetiBoxRequest() {
-
   }
 
   bool CExBusUart::exDecode(int8_t data) {
@@ -287,15 +293,17 @@ namespace ExPowerBox {
     for (auto& s : exDevice_->getSensorCollection()) {
       telemetryTextPkt_[idx].header[0] = 0x3B;
       telemetryTextPkt_[idx].header[1] = 0x01;
-      telemetryTextPkt_[idx].pktLen = 8 + s.getTextDescriptorSize() - 1; // 0x7E separator is not sent
+      telemetryTextPkt_[idx].pktLen = 8 + s->getTextDescriptorSize() - 1; // 0x7E separator is not sent
       telemetryTextPkt_[idx].packetId = 0;
       telemetryTextPkt_[idx].dataId = 0x3A;
-      telemetryTextPkt_[idx].dataLength = s.getTextDescriptorSize() - 1;
+      telemetryTextPkt_[idx].dataLength = s->getTextDescriptorSize() - 1;
 
-      for (size_t i = 0; i < s.getTextDescriptorSize() - 1; ++i) {
-        telemetryTextPkt_[idx].data[i] = s.getTextDescriptor()[i + 1]; // 0x7E separator is skipped
+      for (size_t i = 0; i < s->getTextDescriptorSize() - 1; ++i) {
+        telemetryTextPkt_[idx].data[i] = s->getTextDescriptor()[i + 1]; // 0x7E separator is skipped
       }
       idx++;
+#warning "to be removed"
+      break;
     }
   }
 } /* namespace ExPowerBox */

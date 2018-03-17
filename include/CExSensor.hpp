@@ -35,42 +35,23 @@
 
 namespace Jeti {
   namespace Sensor {
-      enum class Type
-        : int {
-          voltage = 1,
-        current,
-        temperature,
-        gps
-      };
-      enum class DataType
-        : uint8_t
-        {
-          int6 = 0,
-        int14 = 1,
-        int22 = 4,
-        timeDate = 5,
-        int30 = 8,
-        gps = 9
-      };
-
-      typedef struct _gps {
-          struct {
-              uint8_t degree;
-              uint32_t minute;
-              char hemisphere;
-          } longitude;
-          struct {
-              uint8_t degree;
-              uint32_t minute;
-              char hemisphere;
-          } latitude;
-      } gps_t;
-
-      typedef struct _data_desc {
-          uint8_t dataType;
-          uint8_t id;
-          uint8_t *formattedValue;
-      } data_desc_t;
+    enum class Type
+      : int {
+        voltage = 1,
+      current,
+      temperature,
+      gps
+    };
+    enum class DataType
+      : uint8_t
+      {
+        int6 = 0,
+      int14 = 1,
+      int22 = 4,
+      timeDate = 5,
+      int30 = 8,
+      gps = 9
+    };
 
     class CExSensor {
       public:
@@ -90,6 +71,25 @@ namespace Jeti {
         virtual void setValue(int8_t val);
         virtual void setValue(int16_t val);
         virtual void setValue(int32_t val);
+
+        typedef struct {
+            struct {
+                uint8_t degree;
+                uint32_t minute;
+                char hemisphere;
+            } longitude;
+            struct {
+                uint8_t degree;
+                uint32_t minute;
+                char hemisphere;
+            } latitude;
+        } gps_t;
+
+        typedef struct {
+            uint8_t dataType;
+            uint8_t id;
+            uint8_t *formattedValue;
+        } data_desc_t;
 
       protected:
         uint8_t id_;

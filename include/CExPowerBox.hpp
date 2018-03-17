@@ -15,6 +15,7 @@
 
 #include "CExDevice.hpp"
 #include "CExBus.hpp"
+#include "CJetibox.hpp"
 #include "CGps.hpp"
 #include "CLTC2943.hpp"
 #include "CMAX6639.hpp"
@@ -54,11 +55,13 @@ namespace ExPowerBox {
       void updatePwmSettings(uint32_t freq, float period);
       void updateTelemetryValues();
       void processExBusTimeout();
+      void updateJetibox();
       static void fastAcqThread(void *arg);
       static void lowAcqThread(void *arg);
 
-      static CExBusUart exBus_[NB_EX_UART];
-      static Jeti::Device::CExDevice exDevice_;
+      CExBusUart exBus_[NB_EX_UART];
+      Jeti::Device::CExDevice exDevice_;
+      Jeti::Device::CJetibox jetibox_;
       GPS::CGps gps_;
       static I2CDriver *i2cDriver_;
       I2CConfig i2cConfig_;

@@ -5,7 +5,7 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16
+  USE_OPT = -O0 -ggdb3 -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -129,7 +129,8 @@ CPPSRC = $(ALLCPPSRC) \
          src/CExSensor.cpp \
          src/CGps.cpp \
          src/CLTC2943.cpp \
-         src/CMAX6639.cpp
+         src/CMAX6639.cpp \
+         src/CJetibox.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler

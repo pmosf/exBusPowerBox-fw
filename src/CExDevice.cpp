@@ -8,37 +8,51 @@ namespace Jeti {
     const uint16_t CExDevice::manufacturerId_ = 0xA400;
     const uint16_t CExDevice::deviceId_ = 0;
 
-    std::array<Sensor::CExSensor, EX_NB_SENSORS> CExDevice::sensorCollection_ =
-        {Sensor::CExVoltageSensor(CExDevice::manufacturerId_,
-                                  CExDevice::deviceId_, 1, "V Bat1"),
-         Sensor::CExVoltageSensor(CExDevice::manufacturerId_,
-                                  CExDevice::deviceId_, 2, "V Bat2"),
-         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
-                                  CExDevice::deviceId_, 3, "I Bat1"),
-         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
-                                  CExDevice::deviceId_, 4, "I Bat2"),
-         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
-                                  CExDevice::deviceId_, 5, "C Bat1"),
-         Sensor::CExCurrentSensor(CExDevice::manufacturerId_,
-                                  CExDevice::deviceId_, 6, "C Bat2"),
-         Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
-                                      CExDevice::deviceId_, 7, "T Local"),
-         Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
-                                      CExDevice::deviceId_, 8, "T Ext1"),
-         Sensor::CExTemperatureSensor(CExDevice::manufacturerId_,
-                                      CExDevice::deviceId_, 9, "T Ext2")};
+    Sensor::CExVoltageSensor CExDevice::vBat1_(CExDevice::manufacturerId_,
+                                               CExDevice::deviceId_, 1,
+                                               "V Bat1");
+    Sensor::CExVoltageSensor CExDevice::vBat2_(CExDevice::manufacturerId_,
+                                               CExDevice::deviceId_, 2,
+                                               "V Bat2");
+    Sensor::CExCurrentSensor CExDevice::iBat1_(CExDevice::manufacturerId_,
+                                               CExDevice::deviceId_, 3,
+                                               "I Bat1");
+    Sensor::CExCurrentSensor CExDevice::iBat2_(CExDevice::manufacturerId_,
+                                               CExDevice::deviceId_, 4,
+                                               "I Bat2");
+    Sensor::CExCurrentSensor CExDevice::cBat1_(CExDevice::manufacturerId_,
+                                               CExDevice::deviceId_, 5,
+                                               "C Bat1");
+    Sensor::CExCurrentSensor CExDevice::cBat2_(CExDevice::manufacturerId_,
+                                               CExDevice::deviceId_, 6,
+                                               "C Bat2");
+    Sensor::CExTemperatureSensor CExDevice::tLocal_(CExDevice::manufacturerId_,
+                                                    CExDevice::deviceId_, 7,
+                                                    "T Local");
+    Sensor::CExTemperatureSensor CExDevice::tExt1_(CExDevice::manufacturerId_,
+                                                   CExDevice::deviceId_, 8,
+                                                   "T Ext1");
+    Sensor::CExTemperatureSensor CExDevice::tExt2_(CExDevice::manufacturerId_,
+                                                   CExDevice::deviceId_, 9,
+                                                   "T Ext2");
+
+    std::array<Sensor::CExSensor*, EX_MAX_NB_SENSORS> CExDevice::sensorCollection_ =
+        {&vBat1_, &vBat2_, &iBat1_, &iBat2_, &cBat1_, &cBat2_, &tLocal_,
+         &tExt1_, &tExt2_};
 
     CExDevice::CExDevice() {
-
+      isInitialized_ = false;
       dataPktIndex_ = 0;
       dataIndex_ = 0;
-      sensorCollectionIndex_ = 0;
+      for (size_t i = 0; i < dataPktLen_.size(); ++i)
+        dataPktLen_[i] = 0;
     }
 
     CExDevice::~CExDevice() {
     }
 
     void CExDevice::init() {
+      osalDbgCheck(isInitialized_ != true);
       // initialize device text descriptor
       int idx = 0;
       textDesc_[idx++] = JETI_SENSOR_HEADER;
@@ -65,115 +79,106 @@ namespace Jeti {
 
       // initialize data descriptor
       initDataDesc();
-    }
 
-    void CExDevice::initDataDesc() {
-      dataPktIndex_ = 0;
-      dataIndex_ = 0;
-      sensorCollectionIndex_ = 0;
-
-      AddDataVector(false);
-
-      for (auto& s : sensorCollection_) {
-        switch (s.getDataType()) {
-          // 3 bytes needed for a int6 sensor (type, id, 1 byte of formatted data)
-          case Sensor::DataType::int6:
-            dataPktIndex_ =
-                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
-                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
-                                                       dataPktIndex_;
-            AddDataVector(true);
-            break;
-            // 4 bytes needed for a int14 sensor (type, id, 2 bytes of formatted data)
-          case Sensor::DataType::int14:
-            dataPktIndex_ =
-                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
-                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
-                                                       dataPktIndex_;
-            AddDataVector(true);
-            break;
-
-            // 5 bytes needed for a int22 sensor (type, id, 3 bytes of formatted data)
-          case Sensor::DataType::int22:
-            dataPktIndex_ =
-                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
-                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
-                                                       dataPktIndex_;
-            AddDataVector(true);
-            break;
-
-            // 5 bytes needed for a gps sensor (type, id, 3 bytes of formatted data)
-          case Sensor::DataType::gps:
-            dataPktIndex_ =
-                dataPktLen_[dataPktIndex_] + EX_TYPE_ID_SIZE
-                    + s.getFormattedValueSize() > 27 ? dataPktIndex_ + 1 :
-                                                       dataPktIndex_;
-            AddDataVector(true);
-            break;
-
-          default:
-            AddDataVector(true);
-            break;
-        }
-
-        // data type
-        dataPkt_[dataPktIndex_][dataIndex_++] =
-            static_cast<uint8_t>(s.getDataType());
-        // sensor ID
-        dataPkt_[dataPktIndex_][dataIndex_++] = s.getId();
-        // pointer to the formatted data is passed to the sensor object
-        s.setFormattedValuePtr(&(dataPkt_[dataPktIndex_][dataIndex_]));
-        // initialize formatted data
-        for (int i = 0; i < s.getFormattedValueSize(); ++i)
-          dataPkt_[dataPktIndex_][dataIndex_++] = 0;
-      }
-      // reserve space for the crc8
-      AddDescLengthCRC();
+      isInitialized_ = true;
     }
 
     const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::getTextDescriptor() {
+      osalDbgCheck(isInitialized_ != false);
       return textDesc_;
     }
 
     uint8_t CExDevice::getTextDescriptorSize() {
+      osalDbgCheck(isInitialized_ != false);
       return textDescSize_;
     }
 
-    const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::getDataDescriptor(
-        int index) {
+    uint8_t* CExDevice::getDataDescriptor(int index) {
+      osalDbgCheck(isInitialized_ != false);
+      osalDbgCheck(index >= 0);
+      osalDbgCheck(index < EX_MAX_NB_SENSORS);
+
       uint8_t* data = &(dataPkt_[index][2]);
-      data[dataPktLen_[index] - 2] = get_crc8(data, dataPktLen_[index] - 3);
+      uint8_t size = dataPkt_[index][2] & 31;
+      data[size-1] = get_crc8(data, size-1);
 
       return dataPkt_[index];
     }
 
-    std::array<std::array<uint8_t, EX_MAX_PKT_LEN>, EX_NB_SENSORS>& CExDevice::getDataDescriptorCollection() {
-      return dataPkt_;
+    uint8_t CExDevice::getDataDescriptorSize(int index) {
+      osalDbgCheck(isInitialized_ != false);
+      osalDbgCheck(index >= 0);
+      osalDbgCheck(index < EX_MAX_NB_SENSORS);
+
+      return dataPktLen_[index];
+    }
+
+    uint8_t** CExDevice::getDataDescriptorCollection() {
+      osalDbgCheck(isInitialized_ != false);
+      return (uint8_t**)dataPkt_;
     }
 
     uint8_t CExDevice::getDataDescCollectionSize() {
-      return dataPktIndex_ + 1;
+      osalDbgCheck(isInitialized_ != false);
+      return dataPktIndex_;
     }
 
-    std::array<Sensor::CExSensor, EX_NB_SENSORS>& CExDevice::getSensorCollection() {
+    std::array<Sensor::CExSensor*, EX_MAX_NB_SENSORS>& CExDevice::getSensorCollection() {
+      osalDbgCheck(isInitialized_ != false);
       return sensorCollection_;
     }
 
     Sensor::CExSensor* CExDevice::getSensor(int index) {
-      return &sensorCollection_[index];
+      osalDbgCheck(isInitialized_ != false);
+      return sensorCollection_[index];
     }
 
+    void CExDevice::initDataDesc() {
+          osalDbgCheck(isInitialized_ != true);
+
+          dataPktIndex_ = 0;
+          AddDataVector(false);
+
+          for (int i = 0; i < EX_NB_SENSORS; ++i) {
+            Sensor::CExSensor* s = sensorCollection_[i];
+            if (dataIndex_ + EX_TYPE_ID_SIZE + s->getFormattedValueSize() > 27) {
+              dataPktLen_[dataPktIndex_] = dataIndex_;
+              AddDataVector(true);
+            }
+            // data type
+            dataPkt_[dataPktIndex_][dataIndex_++] =
+                static_cast<uint8_t>(s->getDataType());
+            // sensor ID
+            dataPkt_[dataPktIndex_][dataIndex_++] = s->getId();
+            // pointer to the formatted data is passed to the sensor object
+            s->setFormattedValuePtr(&(dataPkt_[dataPktIndex_][dataIndex_]));
+            // initialize formatted data
+            for (int i = 0; i < s->getFormattedValueSize(); ++i)
+              dataPkt_[dataPktIndex_][dataIndex_++] = 0;
+          }
+          // reserve space for the crc8
+          AddDescLengthCRC();
+          dataPktLen_[dataPktIndex_] = dataIndex_;
+          // index variable will be used to get the size of the collection
+          dataPktIndex_++;
+        }
+
     void CExDevice::AddDescLengthCRC() {
-      // length (separator and ex ID bytes are not included)
-      dataPkt_[dataPktIndex_][2] += dataPktLen_[dataPktIndex_] - 2;
-      // crc8 (separator and ex ID bytes are not included)
+      osalDbgCheck(isInitialized_ != true);
+
+      // reserve a byte for crc8
       dataPkt_[dataPktIndex_][dataIndex_++] = 0;
+      // length (separator and ex ID bytes are not included)
+      dataPkt_[dataPktIndex_][2] += dataIndex_ - 2;
     }
 
     void CExDevice::AddDataVector(bool updateCRC) {
+      osalDbgCheck(isInitialized_ != true);
+
       // update vector with length and CRC
       if (updateCRC) {
         AddDescLengthCRC();
+        dataPktIndex_++;
       }
 
       dataIndex_ = 0;

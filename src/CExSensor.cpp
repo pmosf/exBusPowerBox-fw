@@ -39,6 +39,7 @@ namespace Jeti {
       textDescSize_ = idx + 1;
 
       formattedValueSize_ = 0;
+      formattedValue_ = nullptr;
     }
 
     CExSensor::~CExSensor() {
@@ -75,51 +76,23 @@ namespace Jeti {
     }
 
     void CExSensor::setValue(float val) {
-      uint16_t formattedValue = 0;
-      switch (type_) {
-        case Type::voltage:
-          break;
-        case Type::current:
-          if (val < 8.0) {
-            formattedValue = (uint16_t)(val * 1000.0);
-            formattedValue |= 0x6000;
-          }
-          else if (val < 80.0) {
-            formattedValue = (uint16_t)(val * 100.0);
-            formattedValue |= 0x4000;
-          }
-          else {
-            formattedValue = (uint16_t)(val * 1000.0);
-            formattedValue |= 0x2000;
-          }
-          break;
-        case Type::temperature:
-          formattedValue = static_cast<int16_t>(val * 10.0);
-          if (val < 0.0) {
-            formattedValue |= 0x8000;
-          }
-          formattedValue |= 0x2000;
-          break;
-        default:
-          break;
-      }
-      //chibios_rt::BaseThread
-      chSysLock();
-      formattedValue_[0] = formattedValue;
-      formattedValue_[1] = formattedValue >> 8;
-      chSysUnlock();
+      (void)val;
+      osalDbgAssert(false, "must be implemented in derived class");
     }
 
     void CExSensor::setValue(int8_t val) {
       (void)val;
+      osalDbgAssert(false, "must be implemented in derived class");
     }
 
     void CExSensor::setValue(int16_t val) {
       (void)val;
+      osalDbgAssert(false, "must be implemented in derived class");
     }
 
     void CExSensor::setValue(int32_t val) {
       (void)val;
+      osalDbgAssert(false, "must be implemented in derived class");
     }
 
     CExVoltageSensor::CExVoltageSensor(uint16_t manufacturerId,
@@ -141,6 +114,9 @@ namespace Jeti {
         formattedValue = (uint16_t)(val * 100.0);
         formattedValue |= 0x4000;
       }
+
+      osalDbgCheck(formattedValue_ != nullptr);
+      osalDbgCheck(formattedValueSize_ == 2);
       chSysLock();
       formattedValue_[0] = formattedValue;
       formattedValue_[1] = formattedValue >> 8;
@@ -172,6 +148,8 @@ namespace Jeti {
       }
 
       chSysLock();
+      osalDbgCheck(formattedValue_ != nullptr);
+      osalDbgCheck(formattedValueSize_ == 2);
       formattedValue_[0] = formattedValue;
       formattedValue_[1] = formattedValue >> 8;
       chSysUnlock();
@@ -194,6 +172,8 @@ namespace Jeti {
       }
       formattedValue |= 0x2000;
 
+      osalDbgCheck(formattedValue_ != nullptr);
+      osalDbgCheck(formattedValueSize_ == 2);
       chSysLock();
       formattedValue_[0] = formattedValue;
       formattedValue_[1] = formattedValue >> 8;

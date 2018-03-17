@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include "ch.hpp"
 #include "hal.h"
 
@@ -26,26 +25,26 @@
 #define EX_NB_SERVOS                16
 #define EX_SERVO_POSITION_POOL_SIZE 8
 
+typedef struct {
+    uint8_t header[2];
+    uint8_t pktLen;
+    uint8_t packetId;
+    uint8_t dataId;
+    uint8_t dataLength;
+    uint8_t data[58];
+} packet_t;
+
 namespace ExPowerBox {
-
-    typedef struct _packet {
-        std::uint8_t header[2];
-        std::uint8_t pktLen;
-        std::uint8_t packetId;
-        std::uint8_t dataId;
-        std::uint8_t dataLength;
-        std::uint8_t data[58];
-    } packet_t;
-
   class CExBusUart: public chibios_rt::BaseStaticThread<128> {
     public:
-      CExBusUart(SerialDriver *driver, const char *threadName, Jeti::Device::CExDevice *exDevice);
+      CExBusUart(SerialDriver *driver, const char *threadName,
+                 Jeti::Device::CExDevice *exDevice);
       virtual ~CExBusUart();
       virtual void main(void);
       chibios_rt::EvtSource* getEvent();
       void getServoPosition(uint16_t* dest);
       uint16_t getServoPosition(int ch);
-
+      void sendJetibox(packet_t *p);
 
     private:
       SerialDriver *driver_;
