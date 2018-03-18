@@ -43,17 +43,17 @@ namespace ExPowerBox {
   }
 
   void CExBusUart::getServoPosition(uint16_t* dest) {
-    chSysLock();
+    mutex_.lock();
     for (size_t i = 0; i < servoPosition_.size(); ++i) {
       *dest++ = servoPosition_[i];
     }
-    chSysUnlock();
+    mutex_.unlock();
   }
 
   uint16_t CExBusUart::getServoPosition(int ch) {
-    chSysLock();
+    mutex_.lock();
     return servoPosition_[ch];
-    chSysUnlock();
+    mutex_.unlock();
   }
 
   __attribute__((noreturn))
@@ -86,14 +86,12 @@ namespace ExPowerBox {
 
           if (exPacket_.dataId == JETI_EX_ID_CHANNEL) {
             uint8_t *p = exPacket_.data;
-
-            chSysLock();
+            mutex_.lock();
             for (size_t i = 0; i < servoPosition_.size(); ++i) {
               servoPosition_[i] = *(uint16_t*)p;
               p += 2;
             }
-            chSysUnlock();
-
+            mutex_.unlock();
             evt_.broadcastFlags(EXBUS_SERVO_POSITIONS);
             initPacket();
             continue;
@@ -156,13 +154,13 @@ namespace ExPowerBox {
     telemetryDataPkt_.packetId = exPacket_.packetId;
 
     // 0x7E separator is skipped, crc8 is updated in getDataDescriptor method
-    chSysLock();
     uint8_t *desc = &(exDevice_->getDataDescriptor(telemetryDataPktIndex_)[1]);
+    //exDevice_->lock();
     for (int i = 0;
         i < exDevice_->getDataDescriptorSize(telemetryDataPktIndex_) - 1; ++i) {
       telemetryDataPkt_.data[i] = desc[i];
     }
-    chSysUnlock();
+    //exDevice_->unlock();
 
     telemetryDataPkt_.pktLen = 8
         + exDevice_->getDataDescriptorSize(telemetryDataPktIndex_) - 1;
@@ -290,7 +288,8 @@ namespace ExPowerBox {
 
     // initialize telemetry text packet for device's sensors
     int idx = 1;
-    for (auto& s : exDevice_->getSensorCollection()) {
+    for (int i = 0; i < EX_NB_SENSORS; ++i) {
+      Jeti::Sensor::CExSensor* s = exDevice_->getSensorCollection()[i];
       telemetryTextPkt_[idx].header[0] = 0x3B;
       telemetryTextPkt_[idx].header[1] = 0x01;
       telemetryTextPkt_[idx].pktLen = 8 + s->getTextDescriptorSize() - 1; // 0x7E separator is not sent
@@ -302,8 +301,6 @@ namespace ExPowerBox {
         telemetryTextPkt_[idx].data[i] = s->getTextDescriptor()[i + 1]; // 0x7E separator is skipped
       }
       idx++;
-#warning "to be removed"
-      break;
     }
   }
 } /* namespace ExPowerBox */

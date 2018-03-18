@@ -45,6 +45,14 @@ namespace Jeti {
     CExSensor::~CExSensor() {
     }
 
+    void CExSensor::lock(){
+      mutex_.lock();
+    }
+
+    void CExSensor::unlock(){
+          mutex_.unlock();
+    }
+
     std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE>& CExSensor::getTextDescriptor() {
       return text_;
     }
@@ -66,9 +74,7 @@ namespace Jeti {
     }
 
     void CExSensor::setFormattedValuePtr(uint8_t *p) {
-      chSysLock();
       formattedValue_ = p;
-      chSysUnlock();
     }
 
     int CExSensor::getFormattedValueSize() {
@@ -147,9 +153,10 @@ namespace Jeti {
         formattedValue |= 0x2000;
       }
 
-      chSysLock();
       osalDbgCheck(formattedValue_ != nullptr);
       osalDbgCheck(formattedValueSize_ == 2);
+
+      chSysLock();
       formattedValue_[0] = formattedValue;
       formattedValue_[1] = formattedValue >> 8;
       chSysUnlock();

@@ -28,9 +28,9 @@ namespace ExPowerBox {
                                                                   &exDevice_),
            CExBusUart(&SD6, "exBusUart6", &exDevice_)}), gps_(&SD1), i2cConfig_(
           {STM32_TIMINGR_PRESC(3U) |
-          STM32_TIMINGR_SCLDEL(4U) | STM32_TIMINGR_SDADEL(2U) |
-          STM32_TIMINGR_SCLH(0xF) | STM32_TIMINGR_SCLL(0x13)/*0x00303D5D*/,
-           0, 0}), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD8, &PWMD9, &PWMD12} {
+           STM32_TIMINGR_SCLDEL(4U) | STM32_TIMINGR_SDADEL(2U) |
+           STM32_TIMINGR_SCLH(0xF) | STM32_TIMINGR_SCLL(0x13)/*0x00303D5D*/, 0, 0}), pwmDriver_ {
+          &PWMD1, &PWMD2, &PWMD3, &PWMD8, &PWMD9, &PWMD12} {
     // initialize variables
     // set fail-safe and initial servo values to middle position
     for (int i = 0; i < EX_NB_SERVOS; ++i) {
@@ -186,14 +186,16 @@ namespace ExPowerBox {
 
     while (TRUE) {
       chEvtWaitAny(EVENT_HSA_TIMER);
+      //exDevice->lock();
       exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE1)->setValue(
           ltc2943_[0].GetVoltage());
-      /*exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE2)->setValue(
+      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE2)->setValue(
           ltc2943_[1].GetVoltage());
       exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT1)->setValue(
           ltc2943_[0].GetCurrent());
-      exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT2)->setValue(
-          ltc2943_[1].GetCurrent());*/
+      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT2)->setValue(
+          ltc2943_[1].GetCurrent());
+      //exDevice->unlock();
     }
   }
 
@@ -213,16 +215,18 @@ namespace ExPowerBox {
 
     while (TRUE) {
       chEvtWaitAny(EVENT_LSA_TIMER);
-      /*exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setValue(
-       ltc2943_[0].GetCapacity());
-       exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY2)->setValue(
-       ltc2943_[1].GetCapacity());
-       exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::T_LOCAL)->setValue(
-       ltc2943_[0].GetTemperature());
-       exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT1)->setValue(
-       max6639_.GetExtTemperature(0));
-       exDevice_.getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT2)->setValue(
-       max6639_.GetExtTemperature(1));*/
+      //exDevice->lock();
+      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setValue(
+          ltc2943_[0].GetCapacity());
+      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY2)->setValue(
+          ltc2943_[1].GetCapacity());
+      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_LOCAL)->setValue(
+          ltc2943_[0].GetTemperature());
+      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT1)->setValue(
+          max6639_.GetExtTemperature(0));
+      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT2)->setValue(
+          max6639_.GetExtTemperature(1));
+      //exDevice->unlock();
     }
   }
 

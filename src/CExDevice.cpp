@@ -83,6 +83,14 @@ namespace Jeti {
       isInitialized_ = true;
     }
 
+    void CExDevice::lock() {
+      mutex_.lock();
+    }
+
+    void CExDevice::unlock() {
+      mutex_.unlock();
+    }
+
     const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::getTextDescriptor() {
       osalDbgCheck(isInitialized_ != false);
       return textDesc_;
@@ -98,9 +106,11 @@ namespace Jeti {
       osalDbgCheck(index >= 0);
       osalDbgCheck(index < EX_MAX_NB_SENSORS);
 
+      chSysLock();
       uint8_t* data = &(dataPkt_[index][2]);
       uint8_t size = dataPkt_[index][2] & 31;
-      data[size-1] = get_crc8(data, size-1);
+      data[size - 1] = get_crc8(data, size - 1);
+      chSysUnlock();
 
       return dataPkt_[index];
     }
@@ -134,34 +144,34 @@ namespace Jeti {
     }
 
     void CExDevice::initDataDesc() {
-          osalDbgCheck(isInitialized_ != true);
+      osalDbgCheck(isInitialized_ != true);
 
-          dataPktIndex_ = 0;
-          AddDataVector(false);
+      dataPktIndex_ = 0;
+      AddDataVector(false);
 
-          for (int i = 0; i < EX_NB_SENSORS; ++i) {
-            Sensor::CExSensor* s = sensorCollection_[i];
-            if (dataIndex_ + EX_TYPE_ID_SIZE + s->getFormattedValueSize() > 27) {
-              dataPktLen_[dataPktIndex_] = dataIndex_;
-              AddDataVector(true);
-            }
-            // data type
-            dataPkt_[dataPktIndex_][dataIndex_++] =
-                static_cast<uint8_t>(s->getDataType());
-            // sensor ID
-            dataPkt_[dataPktIndex_][dataIndex_++] = s->getId();
-            // pointer to the formatted data is passed to the sensor object
-            s->setFormattedValuePtr(&(dataPkt_[dataPktIndex_][dataIndex_]));
-            // initialize formatted data
-            for (int i = 0; i < s->getFormattedValueSize(); ++i)
-              dataPkt_[dataPktIndex_][dataIndex_++] = 0;
-          }
-          // reserve space for the crc8
-          AddDescLengthCRC();
-          dataPktLen_[dataPktIndex_] = dataIndex_;
-          // index variable will be used to get the size of the collection
-          dataPktIndex_++;
+      for (int i = 0; i < EX_NB_SENSORS; ++i) {
+        Sensor::CExSensor* s = sensorCollection_[i];
+        if (dataIndex_ + EX_TYPE_ID_SIZE + s->getFormattedValueSize() > 30) {
+          dataPktLen_[dataPktIndex_] = dataIndex_ + 1;
+          AddDataVector(true);
         }
+        // data type
+        dataPkt_[dataPktIndex_][dataIndex_++] =
+            static_cast<uint8_t>(s->getDataType());
+        // sensor ID
+        dataPkt_[dataPktIndex_][dataIndex_++] = s->getId();
+        // pointer to the formatted data is passed to the sensor object
+        s->setFormattedValuePtr(&(dataPkt_[dataPktIndex_][dataIndex_]));
+        // initialize formatted data
+        for (int i = 0; i < s->getFormattedValueSize(); ++i)
+          dataPkt_[dataPktIndex_][dataIndex_++] = 0;
+      }
+      // reserve space for the crc8
+      AddDescLengthCRC();
+      dataPktLen_[dataPktIndex_] = dataIndex_;
+      // index variable will be used to get the size of the collection
+      dataPktIndex_++;
+    }
 
     void CExDevice::AddDescLengthCRC() {
       osalDbgCheck(isInitialized_ != true);

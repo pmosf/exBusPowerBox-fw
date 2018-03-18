@@ -60,6 +60,8 @@ namespace Jeti {
                   std::string name, std::string unit, Type type,
                   DataType dataType);
         virtual ~CExSensor();
+        void lock();
+        void unlock();
         std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE>& getTextDescriptor();
         uint8_t& getTextDescriptorSize();
         uint8_t& getId();

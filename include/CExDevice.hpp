@@ -5,7 +5,7 @@
 
 #include "CExSensor.hpp"
 
-#define EX_NB_SENSORS       1
+#define EX_NB_SENSORS       9
 #define EX_MAX_NB_SENSORS   31
 #define EX_MAX_PKT_LEN      31
 #define EX_TYPE_ID_SIZE     2
@@ -29,6 +29,8 @@ namespace Jeti {
         CExDevice();
         ~CExDevice();
         void init();
+        void lock();
+        void unlock();
         const std::array<uint8_t, EX_MAX_PKT_LEN>& getTextDescriptor();
         uint8_t getTextDescriptorSize();
         uint8_t* getDataDescriptor(int index);
@@ -72,6 +74,7 @@ namespace Jeti {
         std::array<uint8_t, EX_MAX_NB_SENSORS> dataPktLen_;
         uint8_t sensorCollectionIndex_;
         bool isInitialized_;
+        chibios_rt::Mutex mutex_;
     };
   }
 }

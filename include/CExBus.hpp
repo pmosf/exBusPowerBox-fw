@@ -66,6 +66,7 @@ namespace ExPowerBox {
       std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
       chibios_rt::EvtSource evt_;
       uint32_t nbExTelemetryPktSent_;
+      chibios_rt::Mutex mutex_;
 
       bool exDecode(int8_t data);
       void initPacket();
