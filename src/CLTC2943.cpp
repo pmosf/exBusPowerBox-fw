@@ -16,8 +16,10 @@ namespace LTC2943 {
   bool CLTC2943::init() {
     // select slave
     i2cAcquireBus(i2cDriver_);
+    txBuffer_[0] = batIndex_;
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, PCA9543A_I2C_ADDR,
-                                          &batIndex_, 1, nullptr, 0,
+                                          txBuffer_, 1, nullptr, 0,
                                           TIME_MS2I(10));
     i2cReleaseBus(i2cDriver_);
 
@@ -32,6 +34,7 @@ namespace LTC2943 {
     txBuffer_[1] = 1;
 
     i2cAcquireBus(i2cDriver_);
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
                                           txBuffer_, 2, nullptr, 0,
                                           TIME_MS2I(10));
@@ -49,6 +52,7 @@ namespace LTC2943 {
     txBuffer_[2] = 0xFF;
 
     i2cAcquireBus(i2cDriver_);
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
                                           txBuffer_, 3, nullptr, 0,
                                           TIME_MS2I(10));
@@ -65,6 +69,7 @@ namespace LTC2943 {
     txBuffer_[1] = LTC2943_ADC_MODE_AUTO | LTC2943_PRESCALER_1024;
 
     i2cAcquireBus(i2cDriver_);
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
                                           txBuffer_, 2, nullptr, 0,
                                           TIME_MS2I(10));
@@ -86,8 +91,10 @@ namespace LTC2943 {
 
     // select slave
     i2cAcquireBus(i2cDriver_);
+    txBuffer_[0] = batIndex_;
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, PCA9543A_I2C_ADDR,
-                                          &batIndex_, 1, nullptr, 0,
+                                         txBuffer_, 1, nullptr, 0,
                                           TIME_MS2I(10));
     i2cReleaseBus(i2cDriver_);
 
@@ -101,6 +108,7 @@ namespace LTC2943 {
     txBuffer_[1] = LTC2943_ADC_MODE_MAN | LTC2943_PRESCALER_1024;
 
     i2cAcquireBus(i2cDriver_);
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
                                           txBuffer_, 2, nullptr, 0,
                                           TIME_MS2I(10));
@@ -150,8 +158,10 @@ namespace LTC2943 {
   std::int16_t CLTC2943::GetData(std::uint8_t addr) {
     // select slave
     i2cAcquireBus(i2cDriver_);
+    txBuffer_[0] = batIndex_;
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
     i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, PCA9543A_I2C_ADDR,
-                                          &batIndex_, 1, nullptr, 0,
+                                          txBuffer_, 1, nullptr, 0,
                                           TIME_MS2I(10));
     i2cReleaseBus(i2cDriver_);
 
@@ -163,8 +173,11 @@ namespace LTC2943 {
 
     // read data
     i2cAcquireBus(i2cDriver_);
-    i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR, &addr,
-                                          1, rxBuffer_, 2, TIME_MS2I(10));
+    txBuffer_[0] = addr;
+    cacheBufferFlush(txBuffer_, sizeof(txBuffer_));
+    i2cStatus_ = i2cMasterTransmitTimeout(i2cDriver_, LTC2943_I2C_ADDR,
+                                          txBuffer_, 1, rxBuffer_, 2,
+                                          TIME_MS2I(10));
     i2cReleaseBus(i2cDriver_);
 
     if (i2cStatus_ != MSG_OK) {
@@ -172,6 +185,8 @@ namespace LTC2943 {
       isInitialized_ = false;
       return 0.;
     }
+
+    cacheBufferInvalidate(rxBuffer_, sizeof(rxBuffer_));
 
     return ((rxBuffer_[0] << 8) | rxBuffer_[1]);
   }

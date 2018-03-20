@@ -27,6 +27,9 @@
 #define EX_PWM_FREQ             8000000UL
 
 #define I2C_DRIVER              &I2CD1
+#define I2C_100K                0x00303D5D
+#define I2C_400K                0x0010071B
+#define I2C_1M                  0x208
 
 #define EVENT_EXBUS0            EVENT_MASK(0)
 #define EVENT_EXBUS1            EVENT_MASK(1)
@@ -36,12 +39,19 @@
 
 namespace ExPowerBox {
 
-    typedef struct _pwm_settings {
-        uint32_t freq;
-        uint32_t periodTick;
-        float period;
-        uint32_t widthDivider;
-    } pwm_settings_t;
+  typedef struct _pwm_settings {
+      uint32_t freq;
+      uint32_t periodTick;
+      float period;
+      uint32_t widthDivider;
+  } pwm_settings_t;
+
+  typedef struct _thread_params {
+      Jeti::Device::CExDevice *exDevice;
+      I2CDriver *i2cDriver;
+      chibios_rt::Mutex *mutServoPos;
+      chibios_rt::Mutex *mutSensors;
+  } thread_params_t;
 
   class CExPowerBox: public chibios_rt::BaseStaticThread<512> {
     public:
@@ -55,6 +65,7 @@ namespace ExPowerBox {
       void updatePwmSettings(uint32_t freq, float period);
       void updateTelemetryValues();
       void processExBusTimeout();
+      void processExBusError();
       void updateJetibox();
       static void fastAcqThread(void *arg);
       static void lowAcqThread(void *arg);
@@ -83,8 +94,11 @@ namespace ExPowerBox {
       uint32_t exBusSel_;
       bool validEvtReceived_;
       bool isExBusLinkUp_;
+      chibios_rt::Mutex mutServoPos_;
+      chibios_rt::Mutex mutSensors_;
+      thread_params_t threadParams_;
       /*USBConfig usbCfg_;
-      SerialUSBConfig serialUsbCfg_;
-      SerialUSBDriver serialUsbDriver_;*/
+       SerialUSBConfig serialUsbCfg_;
+       SerialUSBDriver serialUsbDriver_;*/
   };
 }

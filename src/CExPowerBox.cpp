@@ -27,10 +27,8 @@ namespace ExPowerBox {
                                                                   "exBusUart5",
                                                                   &exDevice_),
            CExBusUart(&SD6, "exBusUart6", &exDevice_)}), gps_(&SD1), i2cConfig_(
-          {STM32_TIMINGR_PRESC(3U) |
-           STM32_TIMINGR_SCLDEL(4U) | STM32_TIMINGR_SDADEL(2U) |
-           STM32_TIMINGR_SCLH(0xF) | STM32_TIMINGR_SCLL(0x13)/*0x00303D5D*/, 0, 0}), pwmDriver_ {
-          &PWMD1, &PWMD2, &PWMD3, &PWMD8, &PWMD9, &PWMD12} {
+          {I2C_100K, 0, 0}), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD8, &PWMD9,
+                                         &PWMD12} {
     // initialize variables
     // set fail-safe and initial servo values to middle position
     for (int i = 0; i < EX_NB_SERVOS; ++i) {
@@ -41,6 +39,11 @@ namespace ExPowerBox {
     exBusSel_ = 0;
     validEvtReceived_ = false;
     isExBusLinkUp_ = false;
+
+    threadParams_.exDevice = &exDevice_;
+    threadParams_.i2cDriver = i2cDriver_;
+    threadParams_.mutSensors = &mutSensors_;
+    threadParams_.mutServoPos = &mutServoPos_;
 
     // initialize timeout counters
     for (int i = 0; i < NB_EX_UART; ++i) {
@@ -91,11 +94,12 @@ namespace ExPowerBox {
   void CExPowerBox::main() {
     setName("ExPowerBox");
 
-    exDevice_.init();
+    exDevice_.init(&mutSensors_);
     jetibox_.init();
 
     // register exbus events and start threads
     for (int i = 0; i < NB_EX_UART; ++i) {
+      exBus_[i].init(&mutServoPos_, &mutSensors_);
       exBus_[i].getEvent()->registerMask(&exBusEvent_[i], EVENT_MASK(i));
       addEvents(EVENT_MASK(i));
       exBus_[i].start(NORMALPRIO);
@@ -104,12 +108,12 @@ namespace ExPowerBox {
     // start low-speed sensor acquisition thread
     chThdCreateStatic(lowSpeedWA, sizeof(lowSpeedWA),
     NORMALPRIO - 2,
-                      lowAcqThread, &exDevice_);
+                      lowAcqThread, &threadParams_);
 
     // start high-speed acquisition thread
     chThdCreateStatic(highSpeedWA, sizeof(highSpeedWA),
     NORMALPRIO - 1,
-                      fastAcqThread, &exDevice_);
+                      fastAcqThread, &threadParams_);
 
     while (true) {
       // set servos to fail-safe positions if no activity on exbus uarts
@@ -120,14 +124,14 @@ namespace ExPowerBox {
 
       // Waiting for ExBus events
       eventmask_t evt = waitOneEventTimeout(
-          ((eventmask_t)1 << (eventmask_t)(exBusSel_)), TIME_MS2I(30));
+          ((eventmask_t)1 << (eventmask_t)(exBusSel_)), TIME_MS2I(50));
 
       // in case of 4 consecutive timeouts, we select another exbus receiver
       if (evt == 0) {
         // wait for one valid event before timeout detection
-        if (!validEvtReceived_ || !isExBusLinkUp_)
+        if (!validEvtReceived_ || !isExBusLinkUp_) {
           continue;
-
+        }
         processExBusTimeout();
         continue;
       }
@@ -160,6 +164,12 @@ namespace ExPowerBox {
           processExBusTimeout();
         continue;
       }
+
+      if ((flags & EXBUS_CRC_ERR) || (flags & EXBUS_UART_ERR)) {
+        if (isExBusLinkUp_) {
+          processExBusError();
+        }
+      }
     }
   }
 
@@ -174,7 +184,7 @@ namespace ExPowerBox {
   void CExPowerBox::fastAcqThread(void* arg) {
     chRegSetThreadName("HSpeedAcq");
 
-    Jeti::Device::CExDevice *exDevice = (Jeti::Device::CExDevice*)arg;
+    thread_params_t *tp = (thread_params_t*)arg;
     event_listener_t el;
 
     evtObjectInit(&lowSpeedTimer_, TIME_MS2I(500));
@@ -186,16 +196,16 @@ namespace ExPowerBox {
 
     while (TRUE) {
       chEvtWaitAny(EVENT_HSA_TIMER);
-      //exDevice->lock();
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE1)->setValue(
+      tp->mutSensors->lock();
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE1)->setValue(
           ltc2943_[0].GetVoltage());
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE2)->setValue(
           ltc2943_[1].GetVoltage());
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT1)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT1)->setValue(
           ltc2943_[0].GetCurrent());
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT2)->setValue(
           ltc2943_[1].GetCurrent());
-      //exDevice->unlock();
+      tp->mutSensors->unlock();
     }
   }
 
@@ -203,7 +213,7 @@ namespace ExPowerBox {
   void CExPowerBox::lowAcqThread(void* arg) {
     chRegSetThreadName("LSpeedAcq");
 
-    Jeti::Device::CExDevice *exDevice = (Jeti::Device::CExDevice*)arg;
+    thread_params_t *tp = (thread_params_t*)arg;
     event_listener_t el;
 
     evtObjectInit(&highSpeedTimer_, TIME_S2I(2));
@@ -215,19 +225,23 @@ namespace ExPowerBox {
 
     while (TRUE) {
       chEvtWaitAny(EVENT_LSA_TIMER);
-      //exDevice->lock();
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setValue(
+      tp->mutSensors->lock();
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setValue(
           ltc2943_[0].GetCapacity());
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY2)->setValue(
           ltc2943_[1].GetCapacity());
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_LOCAL)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_LOCAL)->setValue(
           ltc2943_[0].GetTemperature());
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT1)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT1)->setValue(
           max6639_.GetExtTemperature(0));
-      exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT2)->setValue(
           max6639_.GetExtTemperature(1));
-      //exDevice->unlock();
+      tp->mutSensors->unlock();
     }
+  }
+
+  void CExPowerBox::processExBusError() {
+
   }
 
   void CExPowerBox::processExBusTimeout() {

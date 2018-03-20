@@ -28,6 +28,9 @@
 #define LTC2943_RSENSE				10.0
 #define LTC2943_Q_LSB				(0.34 * 50.0 / LTC2943_RSENSE * LTC2943_PRESCALER / 4096.0)
 
+#define LTC2943_TX_BUFFER_SIZE  4
+#define LTC2943_RX_BUFFER_SIZE  4
+
 namespace LTC2943
 {
 	class CLTC2943
@@ -47,8 +50,8 @@ namespace LTC2943
 			std::int16_t GetData(std::uint8_t addr);
 			std::uint8_t batIndex_;
 			bool isInitialized_;
-			std::uint8_t txBuffer_[4];
-			std::uint8_t rxBuffer_[4];
+			__attribute__((aligned(32))) std::uint8_t txBuffer_[LTC2943_TX_BUFFER_SIZE];
+			__attribute__((aligned(32))) std::uint8_t rxBuffer_[LTC2943_RX_BUFFER_SIZE];
 			msg_t i2cStatus_;
 			i2cflags_t i2cErrors_;
 

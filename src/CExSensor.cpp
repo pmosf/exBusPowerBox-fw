@@ -45,14 +45,6 @@ namespace Jeti {
     CExSensor::~CExSensor() {
     }
 
-    void CExSensor::lock(){
-      mutex_.lock();
-    }
-
-    void CExSensor::unlock(){
-          mutex_.unlock();
-    }
-
     std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE>& CExSensor::getTextDescriptor() {
       return text_;
     }
@@ -123,10 +115,8 @@ namespace Jeti {
 
       osalDbgCheck(formattedValue_ != nullptr);
       osalDbgCheck(formattedValueSize_ == 2);
-      chSysLock();
       formattedValue_[0] = formattedValue;
       formattedValue_[1] = formattedValue >> 8;
-      chSysUnlock();
     }
 
     CExCurrentSensor::CExCurrentSensor(uint16_t manufacturerId,
@@ -156,10 +146,39 @@ namespace Jeti {
       osalDbgCheck(formattedValue_ != nullptr);
       osalDbgCheck(formattedValueSize_ == 2);
 
-      chSysLock();
       formattedValue_[0] = formattedValue;
       formattedValue_[1] = formattedValue >> 8;
-      chSysUnlock();
+    }
+
+    CExCapacitySensor::CExCapacitySensor(uint16_t manufacturerId,
+                                       uint16_t deviceId, uint8_t id,
+                                       const std::string name) :
+        CExSensor(manufacturerId, deviceId, id, name, "mAh",
+                  Sensor::Type::current, Sensor::DataType::int14) {
+      formattedValueSize_ = 2;
+    }
+
+    void CExCapacitySensor::setValue(float val) {
+      int16_t formattedValue = 0x6000;
+
+      if (val < 8.0) {
+        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue |= 0x6000;
+      }
+      else if (val < 80.0) {
+        formattedValue = (uint16_t)(val * 100.0);
+        formattedValue |= 0x4000;
+      }
+      else {
+        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue |= 0x2000;
+      }
+
+      osalDbgCheck(formattedValue_ != nullptr);
+      osalDbgCheck(formattedValueSize_ == 2);
+
+      formattedValue_[0] = formattedValue;
+      formattedValue_[1] = formattedValue >> 8;
     }
 
     CExTemperatureSensor::CExTemperatureSensor(uint16_t manufacturerId,
@@ -181,10 +200,9 @@ namespace Jeti {
 
       osalDbgCheck(formattedValue_ != nullptr);
       osalDbgCheck(formattedValueSize_ == 2);
-      chSysLock();
+
       formattedValue_[0] = formattedValue;
       formattedValue_[1] = formattedValue >> 8;
-      chSysUnlock();
     }
 
     CExGPS::CExGPS(uint16_t manufacturerId, uint16_t deviceId, uint8_t id) :

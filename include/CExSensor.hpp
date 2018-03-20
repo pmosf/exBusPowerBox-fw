@@ -60,8 +60,6 @@ namespace Jeti {
                   std::string name, std::string unit, Type type,
                   DataType dataType);
         virtual ~CExSensor();
-        void lock();
-        void unlock();
         std::array<uint8_t, JETI_EX_TEXT_DESC_SIZE>& getTextDescriptor();
         uint8_t& getTextDescriptorSize();
         uint8_t& getId();
@@ -103,7 +101,6 @@ namespace Jeti {
         uint8_t *formattedValue_;
         int formattedValueSize_;
         int precision_;
-        chibios_rt::Mutex mutex_;
     };
 
     class CExVoltageSensor: public CExSensor {
@@ -117,6 +114,13 @@ namespace Jeti {
       public:
         CExCurrentSensor(uint16_t manufacturerId, uint16_t deviceId, uint8_t id,
                          std::string name);
+        void setValue(float val);
+    };
+
+    class CExCapacitySensor: public CExSensor {
+      public:
+        CExCapacitySensor(uint16_t manufacturerId, uint16_t deviceId,
+                          uint8_t id, std::string name);
         void setValue(float val);
     };
 

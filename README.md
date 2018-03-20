@@ -56,3 +56,8 @@ gps
 MAX6639: 0x58
 LTC2943: 0x64
 PCA9543: 0x70
+
+* I2C timing register
+100kHz: 0x00303D5D
+400kHz: 0x0010071B
+1MHz:  0x208

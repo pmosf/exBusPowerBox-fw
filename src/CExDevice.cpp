@@ -20,10 +20,10 @@ namespace Jeti {
     Sensor::CExCurrentSensor CExDevice::iBat2_(CExDevice::manufacturerId_,
                                                CExDevice::deviceId_, 4,
                                                "I Bat2");
-    Sensor::CExCurrentSensor CExDevice::cBat1_(CExDevice::manufacturerId_,
+    Sensor::CExCapacitySensor CExDevice::cBat1_(CExDevice::manufacturerId_,
                                                CExDevice::deviceId_, 5,
                                                "C Bat1");
-    Sensor::CExCurrentSensor CExDevice::cBat2_(CExDevice::manufacturerId_,
+    Sensor::CExCapacitySensor CExDevice::cBat2_(CExDevice::manufacturerId_,
                                                CExDevice::deviceId_, 6,
                                                "C Bat2");
     Sensor::CExTemperatureSensor CExDevice::tLocal_(CExDevice::manufacturerId_,
@@ -51,7 +51,7 @@ namespace Jeti {
     CExDevice::~CExDevice() {
     }
 
-    void CExDevice::init() {
+    void CExDevice::init(chibios_rt::Mutex *mutex) {
       osalDbgCheck(isInitialized_ != true);
       // initialize device text descriptor
       int idx = 0;
@@ -83,14 +83,6 @@ namespace Jeti {
       isInitialized_ = true;
     }
 
-    void CExDevice::lock() {
-      mutex_.lock();
-    }
-
-    void CExDevice::unlock() {
-      mutex_.unlock();
-    }
-
     const std::array<uint8_t, EX_MAX_PKT_LEN>& CExDevice::getTextDescriptor() {
       osalDbgCheck(isInitialized_ != false);
       return textDesc_;
@@ -106,11 +98,9 @@ namespace Jeti {
       osalDbgCheck(index >= 0);
       osalDbgCheck(index < EX_MAX_NB_SENSORS);
 
-      chSysLock();
       uint8_t* data = &(dataPkt_[index][2]);
       uint8_t size = dataPkt_[index][2] & 31;
       data[size - 1] = get_crc8(data, size - 1);
-      chSysUnlock();
 
       return dataPkt_[index];
     }
@@ -175,7 +165,6 @@ namespace Jeti {
 
     void CExDevice::AddDescLengthCRC() {
       osalDbgCheck(isInitialized_ != true);
-
       // reserve a byte for crc8
       dataPkt_[dataPktIndex_][dataIndex_++] = 0;
       // length (separator and ex ID bytes are not included)

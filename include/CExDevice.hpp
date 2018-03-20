@@ -28,9 +28,7 @@ namespace Jeti {
       public:
         CExDevice();
         ~CExDevice();
-        void init();
-        void lock();
-        void unlock();
+        void init(chibios_rt::Mutex *mutex);
         const std::array<uint8_t, EX_MAX_PKT_LEN>& getTextDescriptor();
         uint8_t getTextDescriptorSize();
         uint8_t* getDataDescriptor(int index);
@@ -59,8 +57,8 @@ namespace Jeti {
         static Sensor::CExVoltageSensor vBat2_;
         static Sensor::CExCurrentSensor iBat1_;
         static Sensor::CExCurrentSensor iBat2_;
-        static Sensor::CExCurrentSensor cBat1_;
-        static Sensor::CExCurrentSensor cBat2_;
+        static Sensor::CExCapacitySensor cBat1_;
+        static Sensor::CExCapacitySensor cBat2_;
         static Sensor::CExTemperatureSensor tLocal_;
         static Sensor::CExTemperatureSensor tExt1_;
         static Sensor::CExTemperatureSensor tExt2_;
@@ -74,7 +72,6 @@ namespace Jeti {
         std::array<uint8_t, EX_MAX_NB_SENSORS> dataPktLen_;
         uint8_t sensorCollectionIndex_;
         bool isInitialized_;
-        chibios_rt::Mutex mutex_;
     };
   }
 }

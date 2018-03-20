@@ -25,6 +25,9 @@
 #define MAX6639_MFR_ID			0x4D
 #define MAX6639_DEVICE_REV		0
 
+#define MAX6639_TX_BUFFER_SIZE  4
+#define MAX6639_RX_BUFFER_SIZE  4
+
 namespace MAX6639 {
   class CMAX6639 {
     public:
@@ -37,8 +40,8 @@ namespace MAX6639 {
     private:
       I2CDriver *i2cDriver_;
       bool isPresent_;
-      std::uint8_t txBuffer_[4];
-      std::uint8_t rxBuffer_[4];
+      __attribute__((aligned(32))) std::uint8_t txBuffer_[MAX6639_TX_BUFFER_SIZE];
+      __attribute__((aligned(32))) std::uint8_t rxBuffer_[MAX6639_RX_BUFFER_SIZE];
       msg_t i2cStatus_;
       i2cflags_t i2cErrors_;
   };

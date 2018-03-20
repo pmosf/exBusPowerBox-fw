@@ -5,8 +5,6 @@
  *      Author: pperonna
  */
 
-#include "ch.hpp"
-#include "hal.h"
 #include "CExBus.hpp"
 #include "crc.h"
 #include "usbcfg.h"
@@ -29,6 +27,8 @@ namespace ExPowerBox {
     telemetryTextPktIndex_ = 0;
     telemetryDataPktIndex_ = 0;
     telemetryDataPktArraySize_ = 0;
+    mutServoPos_ = nullptr;
+    mutSensors_ = nullptr;
 
     for (size_t i = 0; i < servoPosition_.size(); ++i)
       servoPosition_[i] = 0;
@@ -38,22 +38,28 @@ namespace ExPowerBox {
     sdStop(driver_);
   }
 
+  void CExBusUart::init(chibios_rt::Mutex *mutServoPos,
+                        chibios_rt::Mutex *mutSensors) {
+    mutServoPos_ = mutServoPos;
+    mutSensors_ = mutSensors;
+  }
+
   chibios_rt::EvtSource* CExBusUart::getEvent() {
     return &evt_;
   }
 
   void CExBusUart::getServoPosition(uint16_t* dest) {
-    mutex_.lock();
+    mutServoPos_->lock();
     for (size_t i = 0; i < servoPosition_.size(); ++i) {
       *dest++ = servoPosition_[i];
     }
-    mutex_.unlock();
+    mutServoPos_->unlock();
   }
 
   uint16_t CExBusUart::getServoPosition(int ch) {
-    mutex_.lock();
+    mutServoPos_->lock();
     return servoPosition_[ch];
-    mutex_.unlock();
+    mutServoPos_->unlock();
   }
 
   __attribute__((noreturn))
@@ -65,11 +71,28 @@ namespace ExPowerBox {
     initTextDesc();
     initDataDesc();
 
+    chEvtRegisterMaskWithFlags(
+        &driver_->event,
+        &evlUart_,
+        EVENT_MASK(5),
+        /*CHN_INPUT_AVAILABLE | */CHN_TRANSMISSION_END /*| SD_OVERRUN_ERROR
+            | SD_FRAMING_ERROR | SD_PARITY_ERROR | SD_NOISE_ERROR*/);
+    addEvents(EVENT_MASK(5));
+
     while (true) {
       size_t n = chnReadTimeout((BaseChannel * )driver_, &rxData_, 1,
-                                TIME_MS2I(20));
-      // timeout
-      if (!n) {
+       TIME_MS2I(20));
+       // timeout
+       if (!n) {
+       initPacket();
+       // waiting for 1st packet before taking care of timeout
+       if (!nbExValidPacket_) {
+       continue;
+       }
+       evt_.broadcastFlags(EXBUS_TIMEOUT);
+       }
+      /*evmskUart_ = waitOneEventTimeout(EVENT_MASK(5), TIME_MS2I(30));
+      if (evmskUart_ == 0) {
         initPacket();
         // waiting for 1st packet before taking care of timeout
         if (!nbExValidPacket_) {
@@ -77,6 +100,15 @@ namespace ExPowerBox {
         }
         evt_.broadcastFlags(EXBUS_TIMEOUT);
       }
+
+      evfUart_ = chEvtGetAndClearFlags(&evlUart_);
+      if (!(evfUart_ & CHN_INPUT_AVAILABLE )) {
+        evt_.broadcastFlags(EXBUS_UART_ERR);
+        nbExInvalidPacket_++;
+        initPacket();
+        continue;
+      }
+      sdRead(driver_, &rxData_, 1);*/
 
       if (exDecode(rxData_)) {
         nbExPacket_++;
@@ -86,12 +118,12 @@ namespace ExPowerBox {
 
           if (exPacket_.dataId == JETI_EX_ID_CHANNEL) {
             uint8_t *p = exPacket_.data;
-            mutex_.lock();
+            mutServoPos_->lock();
             for (size_t i = 0; i < servoPosition_.size(); ++i) {
               servoPosition_[i] = *(uint16_t*)p;
               p += 2;
             }
-            mutex_.unlock();
+            mutServoPos_->unlock();
             evt_.broadcastFlags(EXBUS_SERVO_POSITIONS);
             initPacket();
             continue;
@@ -151,16 +183,15 @@ namespace ExPowerBox {
       return;
     }
 
+    // send sensor data
+    mutSensors_->lock();
     telemetryDataPkt_.packetId = exPacket_.packetId;
-
     // 0x7E separator is skipped, crc8 is updated in getDataDescriptor method
     uint8_t *desc = &(exDevice_->getDataDescriptor(telemetryDataPktIndex_)[1]);
-    //exDevice_->lock();
     for (int i = 0;
         i < exDevice_->getDataDescriptorSize(telemetryDataPktIndex_) - 1; ++i) {
       telemetryDataPkt_.data[i] = desc[i];
     }
-    //exDevice_->unlock();
 
     telemetryDataPkt_.pktLen = 8
         + exDevice_->getDataDescriptorSize(telemetryDataPktIndex_) - 1;
@@ -174,11 +205,26 @@ namespace ExPowerBox {
     telemetryDataPkt_.data[telemetryDataPkt_.dataLength] = crc;
     telemetryDataPkt_.data[telemetryDataPkt_.dataLength + 1] = crc >> 8;
 
-    sdWrite(driver_, (const uint8_t* )&telemetryDataPkt_,
+    sdWrite(driver_, (const uint8_t* )&telemetryDataPkt_.header[0],
             telemetryDataPkt_.pktLen);
 
-    //chnWrite(&PORTAB_SDU1, (const uint8_t* )&telemetryDataPkt_, telemetryDataPkt_.pktLen);
-    //chnWrite(&PORTAB_SDU1, (const uint8_t* )"toto", 4);
+    // wait for end of transmission
+    evmskUart_ = waitOneEventTimeout(EVENT_MASK(5), TIME_MS2I(30));
+    if (evmskUart_ == 0) {
+      evt_.broadcastFlags(EXBUS_TIMEOUT);
+    }
+
+    evfUart_ = chEvtGetAndClearFlags(&evlUart_);
+    if (!(evfUart_ & CHN_TRANSMISSION_END )) {
+      evt_.broadcastFlags(EXBUS_UART_ERR);
+    }
+
+    mutSensors_->unlock();
+
+    // flush input queue
+    chSysLock();
+    iqResetI(&driver_->iqueue);
+    chSysUnlock();
 
     telemetryDataPktIndex_++;
     if (telemetryDataPktIndex_ == exDevice_->getDataDescCollectionSize())
@@ -204,7 +250,11 @@ namespace ExPowerBox {
           state_++;
         }
         else
+        {
+          exPacket_.header[0] = 0;
+          exPacket_.header[1] = 0;
           state_ = 0;
+        }
         break;
 
         // packet length
