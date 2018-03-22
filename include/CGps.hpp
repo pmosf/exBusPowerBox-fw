@@ -41,61 +41,62 @@
 
 #define GPS_MAX_FIELD_SIZE 15
 
-typedef struct {
-    std::uint8_t sync[2];
-    std::uint8_t id;
-    std::uint16_t size;
-    std::uint8_t payload[GPS_UBX_FRAME_SIZE];
-    std::uint8_t checksum[2];
-} gps_ubx_msg_t;
-
-typedef struct {
-    uint8_t degree;
-    uint32_t minute;
-    char hemisphere;
-} gps_coordinates_t;
-
-typedef struct {
-    uint16_t speed;
-    uint16_t altitude;
-    gps_coordinates_t longitude;
-    gps_coordinates_t latitude;
-    uint8_t nb_sat;
-    uint8_t fix;
-    bool valid;
-    uint8_t fixType;
-    uint8_t dataGood;
-    int32_t lat;
-    int32_t lon;
-    int32_t alt;
-    uint16_t eph;
-    uint16_t epv;
-    uint16_t vel;
-    uint16_t cog;
-    uint8_t checksum;
-    chibios_rt::Mutex mtx;
-} gps_data_t;
-
-typedef struct {
-    uint8_t numVisible; // Number of satellites visible
-    uint8_t prn[12]; // Global satellite ID
-    uint8_t elevation[12]; // Elevation (0: right on top of receiver, 90: on the horizon) of satellite
-    uint8_t azimuth[12]; // Direction of satellite, 0: 0 deg, 255: 360 deg.
-    uint8_t snr[12]; // Signal to noise ratio of satellite
-    chibios_rt::Mutex mtx;
-} gps_satellites_t;
-
 namespace GPS {
-  class CGps: public chibios_rt::BaseStaticThread<512>, protected ::UARTConfig {
+  typedef struct {
+      std::uint8_t sync[2];
+      std::uint8_t id;
+      std::uint16_t size;
+      std::uint8_t payload[GPS_UBX_FRAME_SIZE];
+      std::uint8_t checksum[2];
+  } gps_ubx_msg_t;
+
+  typedef struct {
+      uint8_t degree;
+      uint32_t minute;
+      char hemisphere;
+  } gps_coordinates_t;
+
+  typedef struct {
+      uint16_t speed;
+      uint16_t altitude;
+      gps_coordinates_t longitude;
+      gps_coordinates_t latitude;
+      uint8_t nb_sat;
+      uint8_t fix;
+      bool valid;
+      uint8_t fixType;
+      uint8_t dataGood;
+      int32_t lat;
+      int32_t lon;
+      int32_t alt;
+      uint16_t eph;
+      uint16_t epv;
+      uint16_t vel;
+      uint16_t cog;
+      uint8_t checksum;
+      chibios_rt::Mutex mtx;
+  } gps_data_t;
+
+  typedef struct {
+      uint8_t numVisible; // Number of satellites visible
+      uint8_t prn[12]; // Global satellite ID
+      uint8_t elevation[12]; // Elevation (0: right on top of receiver, 90: on the horizon) of satellite
+      uint8_t azimuth[12]; // Direction of satellite, 0: 0 deg, 255: 360 deg.
+      uint8_t snr[12]; // Signal to noise ratio of satellite
+      chibios_rt::Mutex mtx;
+  } gps_satellites_t;
+
+  class CGps: public chibios_rt::BaseStaticThread<512> {
     public:
-      CGps(UARTDriver *uartDriver);
+      CGps(SerialDriver *uartDriver);
       ~CGps();
       virtual void main();
       void getCoordinates();
       int getData(gps_data_t* gps_data);
 
     private:
-      UARTDriver *serialDriver_;
+      SerialDriver *serialDriver_;
+      SerialConfig serialConfig_;
       uint8_t rxData_;
       gps_data_t gpsData_;
       gps_data_t gpsDataTmp_;

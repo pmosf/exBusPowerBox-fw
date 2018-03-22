@@ -6,9 +6,9 @@
 
 namespace GPS {
 
-  CGps::CGps(UARTDriver *uartDriver) :
-      serialDriver_(uartDriver)/*, serialConfig_(
-          {57600, 0, USART_CR2_STOP_1 | USART_CR2_LINEN, 0})*/ {
+  CGps::CGps(SerialDriver *uartDriver) :
+      serialDriver_(uartDriver), serialConfig_(
+          {57600, 0, USART_CR2_STOP_1 | USART_CR2_LINEN, 0}) {
 
     parserInit();
   }
@@ -19,10 +19,10 @@ namespace GPS {
   void CGps::main() {
     setName("GPS");
 
-    //sdStart(serialDriver_, &serialConfig_);
+    sdStart(serialDriver_, &serialConfig_);
 
     while (true) {
-      //chnRead((BaseChannel * )serialDriver_, &rxData_, 1);
+      chnRead((BaseChannel * )serialDriver_, &rxData_, 1);
       parse(rxData_);
     }
   }

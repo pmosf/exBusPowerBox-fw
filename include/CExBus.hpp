@@ -22,12 +22,9 @@
 #define EXBUS_TIMEOUT               EVENT_MASK(3)
 #define EXBUS_CRC_ERR               EVENT_MASK(4)
 #define EXBUS_UART_ERR              EVENT_MASK(5)
-#define EXBUS_UNKNOWN               EVENT_MASK(6)
 
 #define EX_NB_SERVOS                16
 #define EX_SERVO_POSITION_POOL_SIZE 8
-
-#define UART_DRIVER                 UARTDriver
 
 typedef struct {
     uint8_t header[2];
@@ -39,10 +36,9 @@ typedef struct {
 } packet_t;
 
 namespace ExPowerBox {
-  class CExBusUart: public chibios_rt::BaseStaticThread<128>,
-      protected ::UARTConfig {
+  class CExBusUart: public chibios_rt::BaseStaticThread<128> {
     public:
-      CExBusUart(UART_DRIVER *driver, const char *threadName,
+      CExBusUart(SerialDriver *driver, const char *threadName,
                  Jeti::Device::CExDevice *exDevice);
       virtual ~CExBusUart();
       void init(chibios_rt::Mutex *mutServoPos, chibios_rt::Mutex *mutSensors);
@@ -53,22 +49,23 @@ namespace ExPowerBox {
       void sendJetibox(packet_t *p);
 
     private:
-      UART_DRIVER *driver_;
+      SerialDriver *driver_;
+      SerialConfig serialConfig_;
       const char *threadName_;
       Jeti::Device::CExDevice *exDevice_;
       bool isClassInitialized_;
       uint8_t rxData_;
-      __attribute__((aligned(32)))    packet_t exPacket_;
+      __attribute__((aligned(32)))  packet_t exPacket_;
       std::array<packet_t, EX_NB_SENSORS + 1> telemetryTextPkt_;
       uint8_t telemetryTextPktIndex_;
-      __attribute__((aligned(32)))    packet_t telemetryDataPkt_;
+      __attribute__((aligned(32)))  packet_t telemetryDataPkt_;
       uint8_t telemetryDataPktIndex_;
       uint8_t telemetryDataPktArraySize_;
       uint32_t nbExPacket_;
       uint32_t nbExValidPacket_;
       uint32_t nbExInvalidPacket_;
       int8_t state_;
-      __attribute__((aligned(32)))    std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
+      __attribute__((aligned(32)))  std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
       chibios_rt::EvtSource evt_;
       uint32_t nbExTelemetryPktSent_;
       chibios_rt::Mutex *mutServoPos_;
@@ -85,25 +82,6 @@ namespace ExPowerBox {
       void setServoPositionValues();
       void processTelemetryRequest();
       void processJetiBoxRequest();
-
-      void send(void *bytes, size_t len) {
-        uartStartSend(driver_, len, (uint8_t *)bytes);
-      }
-      void sendI(void *bytes, size_t len) {
-        uartStartSendI(driver_, len, (uint8_t *)bytes);
-      }
-      void recv(void *bytes, size_t len) {
-        uartStartReceive(driver_, len, (uint8_t *)bytes);
-      }
-      void recvI(void *bytes, size_t len) {
-        uartStartReceiveI(driver_, len, (uint8_t *)bytes);
-      }
-
-      void txend1_cb(UARTDriver *u);
-      void txend2_cb(UARTDriver *u);
-      void rxend_cb(UARTDriver *u);
-      void rxchar_cb(UARTDriver *u, uint16_t c);
-      void rxerr_cb(UARTDriver *u, uartflags_t e);
   };
 
 } /* namespace ExPowerBox */
