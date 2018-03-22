@@ -25,10 +25,10 @@ namespace ExPowerBox {
       exBus_(
           {CExBusUart(&SD4, "exBusUart4", &exDevice_), CExBusUart(&SD5,
                                                                   "exBusUart5",
-                                                                  &exDevice_),
-           CExBusUart(&SD6, "exBusUart6", &exDevice_)}), gps_(&SD1), i2cConfig_(
-          {I2C_100K, 0, 0}), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD8, &PWMD9,
-                                         &PWMD12} {
+                                                                  &exDevice_)}), gps_(
+          &SD1), i2cConfig_( {I2C_100K, 0, 0}), pwmDriver_ {&PWMD1, &PWMD2,
+                                                            &PWMD3, &PWMD8,
+                                                            &PWMD9, &PWMD12} {
     // initialize variables
     // set fail-safe and initial servo values to middle position
     for (int i = 0; i < EX_NB_SERVOS; ++i) {
@@ -102,9 +102,9 @@ namespace ExPowerBox {
       exBus_[i].init(&mutServoPos_, &mutSensors_);
       exBus_[i].getEvent()->registerMask(&exBusEvent_[i], EVENT_MASK(i));
       addEvents(EVENT_MASK(i));
-      exBus_[i].start(NORMALPRIO);
+      exBus_[i].start(NORMALPRIO+1);
     }
-
+#if  0
     // start low-speed sensor acquisition thread
     chThdCreateStatic(lowSpeedWA, sizeof(lowSpeedWA),
     NORMALPRIO - 2,
@@ -114,10 +114,10 @@ namespace ExPowerBox {
     chThdCreateStatic(highSpeedWA, sizeof(highSpeedWA),
     NORMALPRIO - 1,
                       fastAcqThread, &threadParams_);
-
+#endif
     while (true) {
       // set servos to fail-safe positions if no activity on exbus uarts
-      if (exBusSel_ == 3) {
+      if (exBusSel_ == NB_EX_UART) {
         updateServoPositions(true);
         exBusSel_ = 0;
       }

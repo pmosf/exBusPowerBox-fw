@@ -141,7 +141,7 @@ namespace Jeti {
 
       for (int i = 0; i < EX_NB_SENSORS; ++i) {
         Sensor::CExSensor* s = sensorCollection_[i];
-        if (dataIndex_ + EX_TYPE_ID_SIZE + s->getFormattedValueSize() > 30) {
+        if (dataIndex_ + EX_TYPE_ID_SIZE + s->getFormattedValueSize() > EX_MAX_PKT_LEN - 2) {
           dataPktLen_[dataPktIndex_] = dataIndex_ + 1;
           AddDataVector(true);
         }

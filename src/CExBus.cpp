@@ -71,28 +71,16 @@ namespace ExPowerBox {
     initTextDesc();
     initDataDesc();
 
-    chEvtRegisterMaskWithFlags(
-        &driver_->event,
-        &evlUart_,
-        EVENT_MASK(5),
-        /*CHN_INPUT_AVAILABLE | */CHN_TRANSMISSION_END /*| SD_OVERRUN_ERROR
-            | SD_FRAMING_ERROR | SD_PARITY_ERROR | SD_NOISE_ERROR*/);
-    addEvents(EVENT_MASK(5));
+    //chEvtRegisterMaskWithFlags(&driver_->event, &evlUart_, EVENT_MASK(5),
+    //CHN_INPUT_AVAILABLE | CHN_TRANSMISSION_END | SD_OVERRUN_ERROR
+    // | SD_FRAMING_ERROR | SD_PARITY_ERROR | SD_NOISE_ERROR*/);
+    //addEvents(EVENT_MASK(5));
 
     while (true) {
       size_t n = chnReadTimeout((BaseChannel * )driver_, &rxData_, 1,
-       TIME_MS2I(20));
-       // timeout
-       if (!n) {
-       initPacket();
-       // waiting for 1st packet before taking care of timeout
-       if (!nbExValidPacket_) {
-       continue;
-       }
-       evt_.broadcastFlags(EXBUS_TIMEOUT);
-       }
-      /*evmskUart_ = waitOneEventTimeout(EVENT_MASK(5), TIME_MS2I(30));
-      if (evmskUart_ == 0) {
+                                TIME_MS2I(20));
+      // timeout
+      if (!n) {
         initPacket();
         // waiting for 1st packet before taking care of timeout
         if (!nbExValidPacket_) {
@@ -100,15 +88,24 @@ namespace ExPowerBox {
         }
         evt_.broadcastFlags(EXBUS_TIMEOUT);
       }
+      /*evmskUart_ = waitOneEventTimeout(EVENT_MASK(5), TIME_MS2I(30));
+       if (evmskUart_ == 0) {
+       initPacket();
+       // waiting for 1st packet before taking care of timeout
+       if (!nbExValidPacket_) {
+       continue;
+       }
+       evt_.broadcastFlags(EXBUS_TIMEOUT);
+       }
 
-      evfUart_ = chEvtGetAndClearFlags(&evlUart_);
-      if (!(evfUart_ & CHN_INPUT_AVAILABLE )) {
-        evt_.broadcastFlags(EXBUS_UART_ERR);
-        nbExInvalidPacket_++;
-        initPacket();
-        continue;
-      }
-      sdRead(driver_, &rxData_, 1);*/
+       evfUart_ = chEvtGetAndClearFlags(&evlUart_);
+       if (!(evfUart_ & CHN_INPUT_AVAILABLE )) {
+       evt_.broadcastFlags(EXBUS_UART_ERR);
+       nbExInvalidPacket_++;
+       initPacket();
+       continue;
+       }
+       sdRead(driver_, &rxData_, 1);*/
 
       if (exDecode(rxData_)) {
         nbExPacket_++;
@@ -171,9 +168,9 @@ namespace ExPowerBox {
       telemetryTextPkt_[telemetryTextPktIndex_].data[telemetryTextPkt_[telemetryTextPktIndex_].dataLength
           + 1] = crc >> 8;
 
-      sdWrite(driver_,
-              (const uint8_t* )&telemetryTextPkt_[telemetryTextPktIndex_],
-              telemetryTextPkt_[telemetryTextPktIndex_].pktLen);
+      sdWriteTimeout(
+          driver_, (const uint8_t* )&telemetryTextPkt_[telemetryTextPktIndex_],
+          telemetryTextPkt_[telemetryTextPktIndex_].pktLen, TIME_IMMEDIATE);
 
       telemetryTextPktIndex_++;
       if (telemetryTextPktIndex_ == telemetryTextPkt_.size())
@@ -205,11 +202,11 @@ namespace ExPowerBox {
     telemetryDataPkt_.data[telemetryDataPkt_.dataLength] = crc;
     telemetryDataPkt_.data[telemetryDataPkt_.dataLength + 1] = crc >> 8;
 
-    sdWrite(driver_, (const uint8_t* )&telemetryDataPkt_.header[0],
-            telemetryDataPkt_.pktLen);
+    sdWriteTimeout(driver_, (const uint8_t* )&telemetryDataPkt_.header[0],
+                   telemetryDataPkt_.pktLen, TIME_IMMEDIATE);
 
     // wait for end of transmission
-    evmskUart_ = waitOneEventTimeout(EVENT_MASK(5), TIME_MS2I(30));
+    /*evmskUart_ = waitOneEventTimeout(EVENT_MASK(5), TIME_MS2I(30));
     if (evmskUart_ == 0) {
       evt_.broadcastFlags(EXBUS_TIMEOUT);
     }
@@ -217,7 +214,7 @@ namespace ExPowerBox {
     evfUart_ = chEvtGetAndClearFlags(&evlUart_);
     if (!(evfUart_ & CHN_TRANSMISSION_END )) {
       evt_.broadcastFlags(EXBUS_UART_ERR);
-    }
+    }*/
 
     mutSensors_->unlock();
 
@@ -249,8 +246,7 @@ namespace ExPowerBox {
           exPacket_.header[1] = data;
           state_++;
         }
-        else
-        {
+        else {
           exPacket_.header[0] = 0;
           exPacket_.header[1] = 0;
           state_ = 0;

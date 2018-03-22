@@ -21,7 +21,7 @@
 #include "CMAX6639.hpp"
 
 #define NB_BAT                  2
-#define NB_EX_UART              3
+#define NB_EX_UART              2
 #define NB_TIM_PWM              6
 
 #define EX_PWM_FREQ             8000000UL
