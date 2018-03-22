@@ -92,6 +92,7 @@ PROJECT = exBusPowerBox
 
 # Imported source files and paths
 CHIBIOS = ../../chibios182
+CONFDIR  := ./cfg
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
 # Startup files.
@@ -108,7 +109,7 @@ include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 
 # Define linker script file here
-LDSCRIPT= $(STARTUPLD)/STM32F745VG.ld
+LDSCRIPT= $(STARTUPLD)/STM32F746xG.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -156,7 +157,7 @@ TCPPSRC =
 ASMSRC = $(ALLASMSRC)
 ASMXSRC = $(ALLXASMSRC)
 
-INCDIR = $(ALLINC) $(TESTINC) \
+INCDIR = $(CONFDIR) $(ALLINC) $(TESTINC) \
          $(CHCPPINC) $(CHIBIOS)/os/various
 
 #

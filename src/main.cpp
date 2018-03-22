@@ -10,6 +10,9 @@ int main(void) {
    * - Kernel initialization, the main() function becomes a thread and the
    *   RTOS is active.
    */
+
+  //SCB_DisableDCache();
+
   halInit();
   chibios_rt::System::init();
 

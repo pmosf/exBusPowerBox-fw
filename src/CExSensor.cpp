@@ -66,6 +66,7 @@ namespace Jeti {
     }
 
     void CExSensor::setFormattedValuePtr(uint8_t *p) {
+      osalDbgCheck(p != nullptr);
       formattedValue_ = p;
     }
 
@@ -102,14 +103,14 @@ namespace Jeti {
     }
 
     void CExVoltageSensor::setValue(float val) {
-      int16_t formattedValue = 0x6000;
+      uint16_t formattedValue = 0;
 
       if (val < 8.0) {
-        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue = static_cast<uint16_t>(val * 1000.0);
         formattedValue |= 0x6000;
       }
       else {
-        formattedValue = (uint16_t)(val * 100.0);
+        formattedValue = static_cast<uint16_t>(val * 100.0);
         formattedValue |= 0x4000;
       }
 
@@ -128,18 +129,18 @@ namespace Jeti {
     }
 
     void CExCurrentSensor::setValue(float val) {
-      int16_t formattedValue = 0x6000;
+      uint16_t formattedValue = 0;
 
       if (val < 8.0) {
-        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue = static_cast<uint16_t>(val * 1000.0);
         formattedValue |= 0x6000;
       }
       else if (val < 80.0) {
-        formattedValue = (uint16_t)(val * 100.0);
+        formattedValue = static_cast<uint16_t>(val * 100.0);
         formattedValue |= 0x4000;
       }
       else {
-        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue = static_cast<uint16_t>(val * 1000.0);
         formattedValue |= 0x2000;
       }
 
@@ -151,26 +152,26 @@ namespace Jeti {
     }
 
     CExCapacitySensor::CExCapacitySensor(uint16_t manufacturerId,
-                                       uint16_t deviceId, uint8_t id,
-                                       const std::string name) :
+                                         uint16_t deviceId, uint8_t id,
+                                         const std::string name) :
         CExSensor(manufacturerId, deviceId, id, name, "mAh",
                   Sensor::Type::current, Sensor::DataType::int14) {
       formattedValueSize_ = 2;
     }
 
     void CExCapacitySensor::setValue(float val) {
-      int16_t formattedValue = 0x6000;
+      uint16_t formattedValue = 0;
 
-      if (val < 8.0) {
-        formattedValue = (uint16_t)(val * 1000.0);
-        formattedValue |= 0x6000;
-      }
-      else if (val < 80.0) {
-        formattedValue = (uint16_t)(val * 100.0);
-        formattedValue |= 0x4000;
+      if (val < 8000.0) {
+        /*formattedValue = static_cast<uint16_t>(val * 100.0);
+         formattedValue |= 0x4000;
+         }
+         else {*/
+        formattedValue = static_cast<uint16_t>(val);
+        //formattedValue |= 0x2000;
       }
       else {
-        formattedValue = (uint16_t)(val * 1000.0);
+        formattedValue = 8191;
         formattedValue |= 0x2000;
       }
 
@@ -190,9 +191,9 @@ namespace Jeti {
     }
 
     void CExTemperatureSensor::setValue(float val) {
-      int16_t formattedValue;
+      int16_t formattedValue = 0;
 
-      formattedValue = static_cast<std::int16_t>(val * 10.0);
+      formattedValue = static_cast<int16_t>(val * 10.0);
       if (val < 0.0) {
         formattedValue |= 0x8000;
       }

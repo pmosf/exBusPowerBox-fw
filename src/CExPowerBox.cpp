@@ -23,10 +23,10 @@ namespace ExPowerBox {
 
   CExPowerBox::CExPowerBox() :
       exBus_(
-          {CExBusUart(&SD4, "exBusUart4", &exDevice_), CExBusUart(&SD5,
+          {CExBusUart(&UARTD4, "exBusUart4", &exDevice_), CExBusUart(&UARTD5,
                                                                   "exBusUart5",
                                                                   &exDevice_),
-           CExBusUart(&SD6, "exBusUart6", &exDevice_)}), gps_(&SD1), i2cConfig_(
+           CExBusUart(&UARTD6, "exBusUart6", &exDevice_)}), gps_(&UARTD1), i2cConfig_(
           {I2C_100K, 0, 0}), pwmDriver_ {&PWMD1, &PWMD2, &PWMD3, &PWMD8, &PWMD9,
                                          &PWMD12} {
     // initialize variables

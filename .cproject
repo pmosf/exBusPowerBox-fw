@@ -32,6 +32,7 @@
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
 									<listOptionValue builtIn="false" value="&quot;C:\ChibiStudio\chibios182\os\lib\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox/cfg}&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1337802279" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -47,6 +48,7 @@
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox/cfg}&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.338985256" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -62,6 +64,7 @@
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
 									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox/cfg}&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.714476670" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
