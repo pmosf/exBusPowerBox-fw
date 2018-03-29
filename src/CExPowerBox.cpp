@@ -104,15 +104,15 @@ namespace ExPowerBox {
       addEvents(EVENT_MASK(i));
       exBus_[i].start(NORMALPRIO+1);
     }
-#if  0
+#if  1
     // start low-speed sensor acquisition thread
     chThdCreateStatic(lowSpeedWA, sizeof(lowSpeedWA),
-    NORMALPRIO - 2,
+                      LOWPRIO,
                       lowAcqThread, &threadParams_);
 
     // start high-speed acquisition thread
     chThdCreateStatic(highSpeedWA, sizeof(highSpeedWA),
-    NORMALPRIO - 1,
+                      LOWPRIO+1,
                       fastAcqThread, &threadParams_);
 #endif
     while (true) {
@@ -197,13 +197,13 @@ namespace ExPowerBox {
     while (TRUE) {
       chEvtWaitAny(EVENT_HSA_TIMER);
       tp->mutSensors->lock();
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE1)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE1)->setVoltage(
           ltc2943_[0].GetVoltage());
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE2)->setVoltage(
           ltc2943_[1].GetVoltage());
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT1)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT1)->setCurrent(
           ltc2943_[0].GetCurrent());
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CURRENT2)->setCurrent(
           ltc2943_[1].GetCurrent());
       tp->mutSensors->unlock();
     }
@@ -226,15 +226,15 @@ namespace ExPowerBox {
     while (TRUE) {
       chEvtWaitAny(EVENT_LSA_TIMER);
       tp->mutSensors->lock();
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setCapacity(
           ltc2943_[0].GetCapacity());
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY2)->setCapacity(
           ltc2943_[1].GetCapacity());
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_LOCAL)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_LOCAL)->setTemperature(
           ltc2943_[0].GetTemperature());
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT1)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT1)->setTemperature(
           max6639_.GetExtTemperature(0));
-      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT2)->setValue(
+      tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::T_EXT2)->setTemperature(
           max6639_.GetExtTemperature(1));
       tp->mutSensors->unlock();
     }

@@ -168,7 +168,7 @@ namespace ExPowerBox {
       telemetryTextPkt_[telemetryTextPktIndex_].data[telemetryTextPkt_[telemetryTextPktIndex_].dataLength
           + 1] = crc >> 8;
 
-      sdWriteTimeout(
+      chnWriteTimeout(
           driver_, (const uint8_t* )&telemetryTextPkt_[telemetryTextPktIndex_],
           telemetryTextPkt_[telemetryTextPktIndex_].pktLen, TIME_IMMEDIATE);
 
@@ -202,19 +202,22 @@ namespace ExPowerBox {
     telemetryDataPkt_.data[telemetryDataPkt_.dataLength] = crc;
     telemetryDataPkt_.data[telemetryDataPkt_.dataLength + 1] = crc >> 8;
 
-    sdWriteTimeout(driver_, (const uint8_t* )&telemetryDataPkt_.header[0],
+    chnWriteTimeout(driver_, (const uint8_t* )&telemetryDataPkt_,
                    telemetryDataPkt_.pktLen, TIME_IMMEDIATE);
+
+    /*chnWrite(&PORTAB_SDU1, (const uint8_t* )&telemetryDataPkt_,
+             telemetryDataPkt_.pktLen);*/
 
     // wait for end of transmission
     /*evmskUart_ = waitOneEventTimeout(EVENT_MASK(5), TIME_MS2I(30));
-    if (evmskUart_ == 0) {
-      evt_.broadcastFlags(EXBUS_TIMEOUT);
-    }
+     if (evmskUart_ == 0) {
+     evt_.broadcastFlags(EXBUS_TIMEOUT);
+     }
 
-    evfUart_ = chEvtGetAndClearFlags(&evlUart_);
-    if (!(evfUart_ & CHN_TRANSMISSION_END )) {
-      evt_.broadcastFlags(EXBUS_UART_ERR);
-    }*/
+     evfUart_ = chEvtGetAndClearFlags(&evlUart_);
+     if (!(evfUart_ & CHN_TRANSMISSION_END )) {
+     evt_.broadcastFlags(EXBUS_UART_ERR);
+     }*/
 
     mutSensors_->unlock();
 

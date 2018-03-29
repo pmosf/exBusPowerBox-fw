@@ -67,10 +67,10 @@ namespace Jeti {
         std::string& getName();
         void setFormattedValuePtr(uint8_t *p);
         int getFormattedValueSize();
-        virtual void setValue(float val);
-        virtual void setValue(int8_t val);
-        virtual void setValue(int16_t val);
-        virtual void setValue(int32_t val);
+        void setVoltage(float val);
+        void setCurrent(float val);
+        void setCapacity(float val);
+        void setTemperature(float val);
 
         typedef struct {
             struct {
@@ -107,28 +107,24 @@ namespace Jeti {
       public:
         CExVoltageSensor(uint16_t manufacturerId, uint16_t deviceId, uint8_t id,
                          std::string name);
-        void setValue(float val);
     };
 
     class CExCurrentSensor: public CExSensor {
       public:
         CExCurrentSensor(uint16_t manufacturerId, uint16_t deviceId, uint8_t id,
                          std::string name);
-        void setValue(float val);
     };
 
     class CExCapacitySensor: public CExSensor {
       public:
         CExCapacitySensor(uint16_t manufacturerId, uint16_t deviceId,
                           uint8_t id, std::string name);
-        void setValue(float val);
     };
 
     class CExTemperatureSensor: public CExSensor {
       public:
         CExTemperatureSensor(uint16_t manufacturerId, uint16_t deviceId,
                              uint8_t id, std::string name);
-        void setValue(float val);
     };
 
     class CExGPS: public CExSensor {

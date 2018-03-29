@@ -74,26 +74,6 @@ namespace Jeti {
       return formattedValueSize_;
     }
 
-    void CExSensor::setValue(float val) {
-      (void)val;
-      osalDbgAssert(false, "must be implemented in derived class");
-    }
-
-    void CExSensor::setValue(int8_t val) {
-      (void)val;
-      osalDbgAssert(false, "must be implemented in derived class");
-    }
-
-    void CExSensor::setValue(int16_t val) {
-      (void)val;
-      osalDbgAssert(false, "must be implemented in derived class");
-    }
-
-    void CExSensor::setValue(int32_t val) {
-      (void)val;
-      osalDbgAssert(false, "must be implemented in derived class");
-    }
-
     CExVoltageSensor::CExVoltageSensor(uint16_t manufacturerId,
                                        uint16_t deviceId, uint8_t id,
                                        const std::string name) :
@@ -102,7 +82,7 @@ namespace Jeti {
       formattedValueSize_ = 2;
     }
 
-    void CExVoltageSensor::setValue(float val) {
+    void CExSensor::setVoltage(float val) {
       uint16_t formattedValue = 0;
 
       if (val < 8.0) {
@@ -128,7 +108,7 @@ namespace Jeti {
       formattedValueSize_ = 2;
     }
 
-    void CExCurrentSensor::setValue(float val) {
+    void CExSensor::setCurrent(float val) {
       uint16_t formattedValue = 0;
 
       if (val < 8.0) {
@@ -159,16 +139,11 @@ namespace Jeti {
       formattedValueSize_ = 2;
     }
 
-    void CExCapacitySensor::setValue(float val) {
+    void CExSensor::setCapacity(float val) {
       uint16_t formattedValue = 0;
 
       if (val < 8000.0) {
-        /*formattedValue = static_cast<uint16_t>(val * 100.0);
-         formattedValue |= 0x4000;
-         }
-         else {*/
         formattedValue = static_cast<uint16_t>(val);
-        //formattedValue |= 0x2000;
       }
       else {
         formattedValue = 8191;
@@ -190,7 +165,7 @@ namespace Jeti {
       formattedValueSize_ = 2;
     }
 
-    void CExTemperatureSensor::setValue(float val) {
+    void CExSensor::setTemperature(float val) {
       int16_t formattedValue = 0;
 
       formattedValue = static_cast<int16_t>(val * 10.0);
