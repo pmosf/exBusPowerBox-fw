@@ -5,8 +5,8 @@ namespace Jeti {
   namespace Device {
 
     const std::string CExDevice::deviceName_ = "exPowerBox";
-    const uint16_t CExDevice::manufacturerId_ = 0xA400;
-    const uint16_t CExDevice::deviceId_ = 0;
+    const uint16_t CExDevice::manufacturerId_ = 0xA401;
+    const uint16_t CExDevice::deviceId_ = 0xBEEF;
 
     Sensor::CExVoltageSensor CExDevice::vBat1_(CExDevice::manufacturerId_,
                                                CExDevice::deviceId_, 1,
@@ -21,11 +21,11 @@ namespace Jeti {
                                                CExDevice::deviceId_, 4,
                                                "I Bat2");
     Sensor::CExCapacitySensor CExDevice::cBat1_(CExDevice::manufacturerId_,
-                                               CExDevice::deviceId_, 5,
-                                               "C Bat1");
+                                                CExDevice::deviceId_, 5,
+                                                "C Bat1");
     Sensor::CExCapacitySensor CExDevice::cBat2_(CExDevice::manufacturerId_,
-                                               CExDevice::deviceId_, 6,
-                                               "C Bat2");
+                                                CExDevice::deviceId_, 6,
+                                                "C Bat2");
     Sensor::CExTemperatureSensor CExDevice::tLocal_(CExDevice::manufacturerId_,
                                                     CExDevice::deviceId_, 7,
                                                     "T Local");
@@ -58,7 +58,7 @@ namespace Jeti {
       textDesc_[idx++] = JETI_SENSOR_HEADER;
       textDesc_[idx++] = JETI_SENSOR_EX_ID;
       textDesc_[idx++] =
-      JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + deviceName_.size());
+      JETI_SENSOR_PKT_TXT_TYPE | (JETI_SENSOR_TXT_LEN + deviceName_.length());
       textDesc_[idx++] = static_cast<uint8_t>(manufacturerId_);
       textDesc_[idx++] = manufacturerId_ >> 8;
       textDesc_[idx++] = deviceId_;
@@ -68,10 +68,10 @@ namespace Jeti {
       // device identifier, sensor identifiers start from 1
       textDesc_[idx++] = 0;
       // device name length
-      textDesc_[idx++] = deviceName_.size() << 3;
+      textDesc_[idx++] = deviceName_.length() << 3;
       // device name
       for (size_t i = 0; i < deviceName_.length(); ++i) {
-        textDesc_[idx++] = deviceName_[i];
+        textDesc_[idx++] = deviceName_.c_str()[i];
       }
       // crc8, separator and ex packet id are not included
       textDesc_[idx] = get_crc8(&textDesc_[2], idx - 2);
@@ -99,7 +99,8 @@ namespace Jeti {
       osalDbgCheck(index < EX_MAX_NB_SENSORS);
 
       uint8_t* data = &(dataPkt_[index][2]);
-      uint8_t size = dataPkt_[index][2] & 31;
+      uint8_t size = dataPkt_[index][2] & JETI_SENSOR_DATA_LEN_MSK;
+      osalDbgCheck(size < 31);
       data[size - 1] = get_crc8(data, size - 1);
 
       return dataPkt_[index];
@@ -141,15 +142,24 @@ namespace Jeti {
 
       for (int i = 0; i < EX_NB_SENSORS; ++i) {
         Sensor::CExSensor* s = sensorCollection_[i];
-        if (dataIndex_ + EX_TYPE_ID_SIZE + s->getFormattedValueSize() > EX_MAX_PKT_LEN - 2) {
+        if (dataIndex_ + EX_TYPE_ID_SIZE + s->getFormattedValueSize()
+            > EX_MAX_PKT_LEN) {
           dataPktLen_[dataPktIndex_] = dataIndex_ + 1;
           AddDataVector(true);
         }
-        // data type
-        dataPkt_[dataPktIndex_][dataIndex_++] =
-            static_cast<uint8_t>(s->getDataType());
-        // sensor ID
-        dataPkt_[dataPktIndex_][dataIndex_++] = s->getId();
+
+        if (s->getId() > 15) {
+          // data type
+          dataPkt_[dataPktIndex_][dataIndex_++] =
+              static_cast<uint8_t>(s->getDataType()) & 0xF;
+          // sensor ID
+          dataPkt_[dataPktIndex_][dataIndex_++] = s->getId();
+        }
+        else {
+          dataPkt_[dataPktIndex_][dataIndex_++] = (s->getId() << 4)
+              | (static_cast<uint8_t>(s->getDataType()) & 0xF);
+        }
+
         // pointer to the formatted data is passed to the sensor object
         s->setFormattedValuePtr(&(dataPkt_[dataPktIndex_][dataIndex_]));
         // initialize formatted data
@@ -168,7 +178,8 @@ namespace Jeti {
       // reserve a byte for crc8
       dataPkt_[dataPktIndex_][dataIndex_++] = 0;
       // length (separator and ex ID bytes are not included)
-      dataPkt_[dataPktIndex_][2] += dataIndex_ - 2;
+      osalDbgCheck(dataIndex_ < 31);
+      dataPkt_[dataPktIndex_][2] |= dataIndex_ - 2;
     }
 
     void CExDevice::AddDataVector(bool updateCRC) {

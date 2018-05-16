@@ -7,7 +7,7 @@
 
 #define EX_NB_SENSORS       9
 #define EX_MAX_NB_SENSORS   31
-#define EX_MAX_PKT_LEN      31
+#define EX_MAX_PKT_LEN      26
 #define EX_TYPE_ID_SIZE     2
 
 namespace Jeti {

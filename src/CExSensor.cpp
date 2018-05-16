@@ -19,18 +19,18 @@ namespace Jeti {
       text_[idx++] = JETI_SENSOR_HEADER;
       text_[idx++] = JETI_SENSOR_EX_ID;
       text_[idx++] = JETI_SENSOR_PKT_TXT_TYPE
-          | (JETI_SENSOR_TXT_LEN + name.size() + unit.size());
+          | (JETI_SENSOR_TXT_LEN + name.length() + unit.length());
       text_[idx++] = manufacturerId;
       text_[idx++] = manufacturerId >> 8;
       text_[idx++] = deviceId;
       text_[idx++] = deviceId >> 8;
       text_[idx++] = 0; // reserved
       text_[idx++] = id_; // sensor ID
-      text_[idx++] = (name.size() << 3) + unit.size();
-      for (size_t i = 0; i < name.size(); ++i) {
+      text_[idx++] = (name.length() << 3) + unit.length();
+      for (size_t i = 0; i < name.length(); ++i) {
         text_[idx++] = name.c_str()[i];
       }
-      for (size_t i = 0; i < unit.size(); ++i) {
+      for (size_t i = 0; i < unit.length(); ++i) {
         text_[idx++] = unit.c_str()[i];
       }
 

@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-uint16_t get_crc16(uint8_t *p, uint16_t len);
+uint16_t get_crc16(const uint8_t *p, uint8_t len);
 uint8_t get_crc8(const uint8_t* data, uint8_t len);
 
 #ifdef __cplusplus

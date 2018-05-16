@@ -83,7 +83,7 @@ namespace ExPowerBox {
       static event_timer_t highSpeedTimer_;
       static std::array<LTC2943::CLTC2943, NB_BAT> ltc2943_;
       static MAX6639::CMAX6639 max6639_;
-      chibios_rt::EvtListener exBusEvent_[NB_EX_UART];
+      chibios_rt::EventListener exBusEvent_[NB_EX_UART];
       std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
       std::array<uint16_t, EX_NB_SERVOS> servoFailSafePosition_;
       std::array<PWMDriver*, NB_TIM_PWM> pwmDriver_;

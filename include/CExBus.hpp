@@ -43,7 +43,7 @@ namespace ExPowerBox {
       virtual ~CExBusUart();
       void init(chibios_rt::Mutex *mutServoPos, chibios_rt::Mutex *mutSensors);
       virtual void main(void);
-      chibios_rt::EvtSource* getEvent();
+      chibios_rt::EventSource* getEvent();
       void getServoPosition(uint16_t* dest);
       uint16_t getServoPosition(int ch);
       void sendJetibox(packet_t *p);
@@ -66,7 +66,7 @@ namespace ExPowerBox {
       uint32_t nbExInvalidPacket_;
       int8_t state_;
       __attribute__((aligned(32)))  std::array<uint16_t, EX_NB_SERVOS> servoPosition_;
-      chibios_rt::EvtSource evt_;
+      chibios_rt::EventSource evt_;
       uint32_t nbExTelemetryPktSent_;
       chibios_rt::Mutex *mutServoPos_;
       chibios_rt::Mutex *mutSensors_;

@@ -11,14 +11,13 @@ int main(void) {
    *   RTOS is active.
    */
 
-  //SCB_DisableDCache();
-
   halInit();
   chibios_rt::System::init();
 
+  SCB_DisableDCache();
+
   ExPowerBox::CExPowerBox exPowerBox;
   exPowerBox.start(NORMALPRIO);
-  exPowerBox.wait();
 
   while (true) {
     chibios_rt::BaseThread::sleep(TIME_INFINITE);
