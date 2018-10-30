@@ -29,7 +29,7 @@
 #define CHCONF_H
 
 #define _CHIBIOS_RT_CONF_
-#define _CHIBIOS_RT_CONF_VER_5_0_
+#define _CHIBIOS_RT_CONF_VER_6_0_
 
 /*===========================================================================*/
 /**
@@ -315,6 +315,17 @@
  * @note    The default is @p TRUE.
  */
 #define CH_CFG_USE_OBJ_FIFOS                TRUE
+
+/**
+ * @brief   Pipes APIs.
+ * @details If enabled then the pipes APIs are included
+ *          in the kernel.
+ *
+ * @note    The default is @p TRUE.
+ */
+#if !defined(CH_CFG_USE_PIPES)
+#define CH_CFG_USE_PIPES                    TRUE
+#endif
 
 /**
  * @brief   Dynamic Threads APIs.

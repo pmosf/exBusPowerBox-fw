@@ -6,7 +6,7 @@ namespace Jeti {
 
     const std::string CExDevice::deviceName_ = "exPowerBox";
     const uint16_t CExDevice::manufacturerId_ = 0xA401;
-    const uint16_t CExDevice::deviceId_ = 0xBEEF;
+    const uint16_t CExDevice::deviceId_ = 0x0001;
 
     Sensor::CExVoltageSensor CExDevice::vBat1_(CExDevice::manufacturerId_,
                                                CExDevice::deviceId_, 1,
