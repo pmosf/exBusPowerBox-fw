@@ -187,14 +187,14 @@ namespace ExPowerBox {
     thread_params_t *tp = (thread_params_t*)arg;
     event_listener_t el;
 
-    evtObjectInit(&lowSpeedTimer_, TIME_MS2I(500));
+    evtObjectInit(&highSpeedTimer_, TIME_S2I(1));
 
-    chEvtRegisterMask((event_source_t*)&lowSpeedTimer_.et_es, &el,
+    chEvtRegisterMask((event_source_t*)&highSpeedTimer_.et_es, &el,
     EVENT_HSA_TIMER);
 
-    evtStart(&lowSpeedTimer_);
+    evtStart(&highSpeedTimer_);
 
-    while (TRUE) {
+    while (true) {
       chEvtWaitAny(EVENT_HSA_TIMER);
       tp->mutSensors->lock();
       tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_VOLTAGE1)->setVoltage(
@@ -216,14 +216,14 @@ namespace ExPowerBox {
     thread_params_t *tp = (thread_params_t*)arg;
     event_listener_t el;
 
-    evtObjectInit(&highSpeedTimer_, TIME_S2I(2));
+    evtObjectInit(&lowSpeedTimer_, TIME_S2I(2));
 
-    chEvtRegisterMask((event_source_t*)&highSpeedTimer_.et_es, &el,
+    chEvtRegisterMask((event_source_t*)&lowSpeedTimer_.et_es, &el,
     EVENT_LSA_TIMER);
 
-    evtStart(&highSpeedTimer_);
+    evtStart(&lowSpeedTimer_);
 
-    while (TRUE) {
+    while (true) {
       chEvtWaitAny(EVENT_LSA_TIMER);
       tp->mutSensors->lock();
       tp->exDevice->getSensor((int)Jeti::Device::DeviceSensorLUT::BAT_CAPACITY1)->setCapacity(
