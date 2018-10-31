@@ -82,4 +82,10 @@
 			<locationURI>$%7BCHIBIOS%7D/os</locationURI>
 		</link>
 	</linkedResources>
+	<variableList>
+		<variable>
+			<name>CHIBIOS</name>
+			<value>file:/C:/ChibiStudio/chibios182</value>
+		</variable>
+	</variableList>
 </projectDescription>
