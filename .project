@@ -77,19 +77,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>PP_EXBUSPOWERBOX</name>
-			<type>2</type>
-			<location>C:/ChibiStudio/chibios182/os/hal/boards/PP_EXBUSPOWERBOX</location>
-		</link>
-		<link>
-			<name>board</name>
-			<type>2</type>
-			<locationURI>CHIBIOS/os/hal/boards/PP_EXBUSPOWERBOX</locationURI>
-		</link>
-		<link>
 			<name>os</name>
 			<type>2</type>
-			<locationURI>CHIBIOS/os</locationURI>
+			<locationURI>$%7BCHIBIOS%7D/os</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

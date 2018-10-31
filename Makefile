@@ -91,7 +91,7 @@ endif
 PROJECT = exBusPowerBox
 
 # Imported source files and paths
-CHIBIOS = ../../chibios182
+CHIBIOS = c:/ChibiStudio/chibios182
 CONFDIR  := ./cfg
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
@@ -100,7 +100,7 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f7xx.m
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F7xx/platform.mk
-include $(CHIBIOS)/os/hal/boards/PP_EXBUSPOWERBOX/board.mk
+include ./board/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
