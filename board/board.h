@@ -88,8 +88,8 @@
 #define GPIOB_PIN5                  5U
 #define GPIOB_GPS_TX                6U
 #define GPIOB_GPS_RX                7U
-#define GPIOB_SCL                   8U
-#define GPIOB_SDA                   9U
+#define GPIOB_I2C_SCL               8U
+#define GPIOB_I2C_SDA               9U
 #define GPIOB_PIN10                 10U
 #define GPIOB_SERVO6                11U
 #define GPIOB_PIN12                 12U
@@ -274,8 +274,8 @@
 #define LINE_JNRST                  PAL_LINE(GPIOB, 4U)
 #define LINE_GPS_TX                 PAL_LINE(GPIOB, 6U)
 #define LINE_GPS_RX                 PAL_LINE(GPIOB, 7U)
-#define LINE_SCL                    PAL_LINE(GPIOB, 8U)
-#define LINE_SDA                    PAL_LINE(GPIOB, 9U)
+#define LINE_I2C_SCL                PAL_LINE(GPIOB, 8U)
+#define LINE_I2C_SDA                PAL_LINE(GPIOB, 9U)
 #define LINE_SERVO6                 PAL_LINE(GPIOB, 11U)
 #define LINE_SERVO16                PAL_LINE(GPIOB, 14U)
 #define LINE_EXBUS3                 PAL_LINE(GPIOC, 6U)
@@ -479,8 +479,8 @@
  * PB5  - PIN5                      (input pullup).
  * PB6  - GPS_TX                    (alternate 7).
  * PB7  - GPS_RX                    (alternate 7).
- * PB8  - SCL                       (alternate 4).
- * PB9  - SDA                       (alternate 4).
+ * PB8  - I2C_SCL                   (alternate 4).
+ * PB9  - I2C_SDA                   (alternate 4).
  * PB10 - PIN10                     (alternate 1).
  * PB11 - SERVO6                    (alternate 1).
  * PB12 - PIN12                     (input pullup).
@@ -496,8 +496,8 @@
                                      PIN_MODE_INPUT(GPIOB_PIN5) |           \
                                      PIN_MODE_ALTERNATE(GPIOB_GPS_TX) |     \
                                      PIN_MODE_ALTERNATE(GPIOB_GPS_RX) |     \
-                                     PIN_MODE_ALTERNATE(GPIOB_SCL) |        \
-                                     PIN_MODE_ALTERNATE(GPIOB_SDA) |        \
+                                     PIN_MODE_ALTERNATE(GPIOB_I2C_SCL) |    \
+                                     PIN_MODE_ALTERNATE(GPIOB_I2C_SDA) |    \
                                      PIN_MODE_ALTERNATE(GPIOB_PIN10) |      \
                                      PIN_MODE_ALTERNATE(GPIOB_SERVO6) |     \
                                      PIN_MODE_INPUT(GPIOB_PIN12) |          \
@@ -512,8 +512,8 @@
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN5) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_GPS_TX) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_GPS_RX) |     \
-                                     PIN_OTYPE_OPENDRAIN(GPIOB_SCL) |       \
-                                     PIN_OTYPE_OPENDRAIN(GPIOB_SDA) |       \
+                                     PIN_OTYPE_OPENDRAIN(GPIOB_I2C_SCL) |   \
+                                     PIN_OTYPE_OPENDRAIN(GPIOB_I2C_SDA) |   \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN10) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_SERVO6) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN12) |      \
@@ -528,8 +528,8 @@
                                      PIN_OSPEED_HIGH(GPIOB_PIN5) |          \
                                      PIN_OSPEED_HIGH(GPIOB_GPS_TX) |        \
                                      PIN_OSPEED_HIGH(GPIOB_GPS_RX) |        \
-                                     PIN_OSPEED_HIGH(GPIOB_SCL) |           \
-                                     PIN_OSPEED_HIGH(GPIOB_SDA) |           \
+                                     PIN_OSPEED_MEDIUM(GPIOB_I2C_SCL) |     \
+                                     PIN_OSPEED_MEDIUM(GPIOB_I2C_SDA) |     \
                                      PIN_OSPEED_HIGH(GPIOB_PIN10) |         \
                                      PIN_OSPEED_VERYLOW(GPIOB_SERVO6) |     \
                                      PIN_OSPEED_HIGH(GPIOB_PIN12) |         \
@@ -544,8 +544,8 @@
                                      PIN_PUPDR_PULLUP(GPIOB_PIN5) |         \
                                      PIN_PUPDR_PULLUP(GPIOB_GPS_TX) |       \
                                      PIN_PUPDR_PULLUP(GPIOB_GPS_RX) |       \
-                                     PIN_PUPDR_PULLUP(GPIOB_SCL) |          \
-                                     PIN_PUPDR_PULLUP(GPIOB_SDA) |          \
+                                     PIN_PUPDR_FLOATING(GPIOB_I2C_SCL) |    \
+                                     PIN_PUPDR_FLOATING(GPIOB_I2C_SDA) |    \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN10) |        \
                                      PIN_PUPDR_PULLDOWN(GPIOB_SERVO6) |     \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN12) |        \
@@ -560,8 +560,8 @@
                                      PIN_ODR_HIGH(GPIOB_PIN5) |             \
                                      PIN_ODR_HIGH(GPIOB_GPS_TX) |           \
                                      PIN_ODR_HIGH(GPIOB_GPS_RX) |           \
-                                     PIN_ODR_HIGH(GPIOB_SCL) |              \
-                                     PIN_ODR_HIGH(GPIOB_SDA) |              \
+                                     PIN_ODR_HIGH(GPIOB_I2C_SCL) |          \
+                                     PIN_ODR_HIGH(GPIOB_I2C_SDA) |          \
                                      PIN_ODR_HIGH(GPIOB_PIN10) |            \
                                      PIN_ODR_HIGH(GPIOB_SERVO6) |           \
                                      PIN_ODR_HIGH(GPIOB_PIN12) |            \
@@ -576,8 +576,8 @@
                                      PIN_AFIO_AF(GPIOB_PIN5, 0U) |          \
                                      PIN_AFIO_AF(GPIOB_GPS_TX, 7U) |        \
                                      PIN_AFIO_AF(GPIOB_GPS_RX, 7U))
-#define VAL_GPIOB_AFRH              (PIN_AFIO_AF(GPIOB_SCL, 4U) |           \
-                                     PIN_AFIO_AF(GPIOB_SDA, 4U) |           \
+#define VAL_GPIOB_AFRH              (PIN_AFIO_AF(GPIOB_I2C_SCL, 4U) |       \
+                                     PIN_AFIO_AF(GPIOB_I2C_SDA, 4U) |       \
                                      PIN_AFIO_AF(GPIOB_PIN10, 1U) |         \
                                      PIN_AFIO_AF(GPIOB_SERVO6, 1U) |        \
                                      PIN_AFIO_AF(GPIOB_PIN12, 0U) |         \

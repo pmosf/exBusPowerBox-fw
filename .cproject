@@ -2,7 +2,10 @@
 <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="0.114656749">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.114656749" moduleId="org.eclipse.cdt.core.settings" name="Default">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.114656749" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<macros>
+					<stringMacro name="DEBUG" type="VALUE_TEXT" value=""/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -14,65 +17,364 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildProperties="" description="" id="0.114656749" name="Default" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+				<configuration artifactName="${ProjName}" buildProperties="" description="" id="0.114656749" name="Debug" parent="org.eclipse.cdt.build.core.prefbase.cfg">
 					<folderInfo id="0.114656749." name="/" resourcePath="">
 						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.1182750861" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
 							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.1182750861.169007201" name=""/>
 							<builder autoBuildTarget="all" cleanBuildTarget="clean" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.settings.default.builder.579570726" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.2143276802" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1873650595" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.1447170098" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths"/>
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1534595728" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="CORTEX_USE_FPU=TRUE"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.1447170098" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/RTCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/MACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various/cpp_wrappers"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/board/"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/license"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/ADCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ST/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/portability/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SDMMCv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ARM/CMSIS/Core/Include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/QUADSPIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/TIMv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CRYPv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DMAv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/OTGv1"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/cfg"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/src"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CANv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/xWDGv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/common/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/osal/rt"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/EXTIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/rt/include"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
 								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1534595728" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols"/>
 								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.369209271" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="USE_USB"/>
+									<listOptionValue builtIn="false" value="RELEASE"/>
+									<listOptionValue builtIn="false" value="_GLIBCXX_USE_CXX11_ABI"/>
 									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
 								</option>
-								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.531047309" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
-									<listOptionValue builtIn="false" value="&quot;C:\ChibiStudio\chibios182\os\lib\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox/cfg}&quot;"/>
-								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.531047309" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths"/>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1337802279" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1707090075" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.2086965352" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths"/>
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.686970243" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="CORTEX_USE_FPU=TRUE"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.2086965352" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/RTCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/MACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various/cpp_wrappers"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/board/"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/license"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/ADCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ST/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/portability/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SDMMCv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ARM/CMSIS/Core/Include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/QUADSPIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/TIMv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CRYPv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DMAv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/OTGv1"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/cfg"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/src"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CANv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/xWDGv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/common/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/osal/rt"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/EXTIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/rt/include"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
 								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.686970243" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols"/>
 								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.1698070856" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="USE_USB"/>
+									<listOptionValue builtIn="false" value="RELEASE"/>
+									<listOptionValue builtIn="false" value="_GLIBCXX_USE_CXX11_ABI"/>
 									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
 								</option>
-								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.396969385" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox/cfg}&quot;"/>
-								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.396969385" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths"/>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.338985256" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1165165914" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.572974545" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths"/>
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.965096908" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="CORTEX_USE_FPU=TRUE"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.572974545" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/RTCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/MACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various/cpp_wrappers"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/board/"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/license"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/ADCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ST/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/portability/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SDMMCv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ARM/CMSIS/Core/Include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/QUADSPIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/TIMv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CRYPv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DMAv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/OTGv1"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/cfg"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/src"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CANv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/xWDGv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/common/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/osal/rt"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/rt/include"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
 								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.965096908" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols"/>
 								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.844046750" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="USE_USB"/>
+									<listOptionValue builtIn="false" value="RELEASE"/>
+									<listOptionValue builtIn="false" value="_GLIBCXX_USE_CXX11_ABI"/>
 									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1127607706" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
-									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox/cfg}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/rt/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/board}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/LLD/TIMv1}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/LLD/USARTv2}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/LLD/I2Cv2}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/lib/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/common/ext/ST/STM32F7xx}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/STM32F7xx}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\ChibiStudio\tools\GNU Tools ARM Embedded\8-2018-q4\arm-none-eabi\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\ChibiStudio\tools\GNU Tools ARM Embedded\8-2018-q4\lib\gcc\arm-none-eabi\8.2.1\include&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.714476670" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="src|include|test" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="ExSensorList.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="include"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="include"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="0.114656749.1554212807">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.114656749.1554212807" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildProperties="" description="" id="0.114656749.1554212807" name="Release" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+					<folderInfo id="0.114656749.1554212807." name="/" resourcePath="">
+						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.868838646" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
+							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.868838646.2035222232" name=""/>
+							<builder autoBuildTarget="all" cleanBuildTarget="clean" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.settings.default.builder.1523993946" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.166233390" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.1806467906" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.1668397015" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/RTCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/MACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various/cpp_wrappers"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/board/"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/license"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/ADCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ST/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/portability/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SDMMCv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ARM/CMSIS/Core/Include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/QUADSPIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/TIMv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CRYPv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DMAv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/OTGv1"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/cfg"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/src"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CANv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/xWDGv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/common/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/osal/rt"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/EXTIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/rt/include"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.569389465" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.871599457" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="_GLIBCXX_USE_CXX11_ABI"/>
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1032384062" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths"/>
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.541416537" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.946211484" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.1310546197" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/RTCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/MACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various/cpp_wrappers"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/board/"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/license"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/ADCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ST/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/portability/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SDMMCv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ARM/CMSIS/Core/Include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/QUADSPIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/TIMv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CRYPv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DMAv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/OTGv1"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/cfg"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/src"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CANv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/xWDGv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/common/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/osal/rt"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/EXTIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/rt/include"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1485184524" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.1075536217" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols">
+									<listOptionValue builtIn="false" value="_GLIBCXX_USE_CXX11_ABI"/>
+									<listOptionValue builtIn="false" value="CORTEX_USE_FPU"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.2087816686" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths"/>
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.774414942" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.1965800624" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.incpaths.2116900272" name="Undefined Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.undef.incpaths" valueType="undefIncludePath">
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/GPIOv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ports/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/RTCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/MACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various/cpp_wrappers"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/board/"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/license"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/ADCv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ST/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/compilers/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/various"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/portability/GCC"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SDMMCv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/ext/ARM/CMSIS/Core/Include"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/QUADSPIv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/TIMv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CRYPv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/USARTv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/common/startup/ARMCMx/devices/STM32F7xx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DMAv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/OTGv1"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/cfg"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw/src"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/CANv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/I2Cv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/xWDGv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/common/ARMCMx"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/osal/rt"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/SPIv2"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/rt/include"/>
+									<listOptionValue builtIn="false" value="C:/Users/pperonna/cernbox/projects/exBusPowerBox/firmware/exBusPowerBox-fw"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/hal/ports/STM32/LLD/DACv1"/>
+									<listOptionValue builtIn="false" value="C:/ChibiStudio/chibios182/os/lib/include"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.886315012" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.undef.symbols.687445602" name="Undefined Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.undef.symbols" valueType="undefDefinedSymbols"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1760211371" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/rt/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/board}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/LLD/TIMv1}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/LLD/USARTv2}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/LLD/I2Cv2}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/lib/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/common/ext/ST/STM32F7xx}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/exBusPowerBox-fw/os/hal/ports/STM32/STM32F7xx}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\ChibiStudio\tools\GNU Tools ARM Embedded\8-2018-q4\arm-none-eabi\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\ChibiStudio\tools\GNU Tools ARM Embedded\8-2018-q4\lib\gcc\arm-none-eabi\8.2.1\include&quot;"/>
+								</option>
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.820002227" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="include"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
@@ -83,17 +385,26 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="RT-STM32F407-DISCOVERY-G++.null.1703860681" name="RT-STM32F407-DISCOVERY-G++"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="0.114656749">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile"/>
-		</scannerConfigBuildInfo>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Default">
 			<resource resourceType="PROJECT" workspacePath="/exBusPowerBox"/>
 		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/exBusPowerBox-fw"/>
+		</configuration>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/exBusPowerBox-fw"/>
+		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="0.114656749.1554212807">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="0.114656749">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile"/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 </cproject>

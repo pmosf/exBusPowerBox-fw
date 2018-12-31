@@ -28,6 +28,12 @@
 #ifndef CHCONF_H
 #define CHCONF_H
 
+#if DEBUG
+#define CH_DEBUG_OPTIONS	TRUE
+#else
+#define CH_DEBUG_OPTIONS	FALSE
+#endif
+
 #define _CHIBIOS_RT_CONF_
 #define _CHIBIOS_RT_CONF_VER_6_0_
 

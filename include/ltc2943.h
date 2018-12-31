@@ -2,9 +2,6 @@
 
 #include "hal.h"
 
-#include <cstdint>
-#include <string>
-
 #define LTC2943_I2C_ADDR	0x64
 
 #define LTC2943_STATUS_ADDR			0
@@ -31,30 +28,9 @@
 #define LTC2943_TX_BUFFER_SIZE  4
 #define LTC2943_RX_BUFFER_SIZE  4
 
-namespace LTC2943
-{
-	class CLTC2943
-	{
-		public:
-			CLTC2943(I2CDriver *i2cDriver, std::uint8_t batIndex);
-			~CLTC2943();
-			bool init();
-			void StartConv();
-			float GetCapacity();
-			float GetVoltage();
-			float GetCurrent();
-			float GetTemperature();
-		
-		private:
-			I2CDriver *i2cDriver_;
-			std::int16_t GetData(std::uint8_t addr);
-			std::uint8_t batIndex_;
-			bool isInitialized_;
-			__attribute__((aligned(32))) std::uint8_t txBuffer_[LTC2943_TX_BUFFER_SIZE];
-			__attribute__((aligned(32))) std::uint8_t rxBuffer_[LTC2943_RX_BUFFER_SIZE];
-			msg_t i2cStatus_;
-			i2cflags_t i2cErrors_;
-
-			void processI2cError();
-	};
-}
+bool ltc2943Init(void);
+void ltc2943StartSingleConversion(uint8_t channel);
+float ltc2943GetCapacity(uint8_t channel);
+float ltc2943GetVoltage(uint8_t channel);
+float ltc2943GetCurrent(uint8_t channel);
+float ltc2943GetTemperature(void);

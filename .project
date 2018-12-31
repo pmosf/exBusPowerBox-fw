@@ -87,5 +87,9 @@
 			<name>CHIBIOS</name>
 			<value>file:/C:/ChibiStudio/chibios182</value>
 		</variable>
+		<variable>
+			<name>CHIBI_STUDIO</name>
+			<value>file:/C:/ChibiStudio</value>
+		</variable>
 	</variableList>
 </projectDescription>

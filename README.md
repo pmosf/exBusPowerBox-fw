@@ -33,13 +33,14 @@ PCB front view, usb at top
 |S13 | S10
 |S12 | S16
 |S2 | S5
-|S11 | S4
+|S11 | S7
 |S4 | S15
 |S3 | S6
 
+GPS: USART1
 EXBUS1: PC10, AF8, UART4
 EXBUS2: PC12, AF8, UART5
-SPARE_UART: PC6, AF8, UART6
+SPARE_UART: PC6, AF8, USART6
 
 * low-speed sensor acquisition thread
 0.5Hz

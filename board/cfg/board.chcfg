@@ -216,19 +216,19 @@
         Mode="Alternate"
         Alternate="7" />
       <pin8
-        ID="SCL"
+        ID="I2C_SCL"
         Type="OpenDrain"
         Level="High"
-        Speed="Maximum"
-        Resistor="PullUp"
+        Speed="High"
+        Resistor="Floating"
         Mode="Alternate"
         Alternate="4" ></pin8>
       <pin9
-        ID="SDA"
+        ID="I2C_SDA"
         Type="OpenDrain"
         Level="High"
-        Speed="Maximum"
-        Resistor="PullUp"
+        Speed="High"
+        Resistor="Floating"
         Mode="Alternate"
         Alternate="4" />
       <pin10

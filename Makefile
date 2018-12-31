@@ -1,11 +1,17 @@
-##############################################################################
-# Build global options
-# NOTE: Can be overridden externally.
-#
+#all:
+#ifeq ($(RELEASE_BUILD),)
+#	$(info === Building for Release ===============================)
+#else
+#	$(info === Building for Debug ===============================)
+#endif
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O0 -ggdb3 -fomit-frame-pointer -falign-functions=16
+	ifeq ($(RELEASE_BUILD),1)
+		USE_OPT = -std=c11 -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+	else
+		USE_OPT = -std=c11 -O0 -ggdb -fomit-frame-pointer -falign-functions=16
+	endif
 endif
 
 # C specific options here (added to USE_OPT).
@@ -15,7 +21,7 @@ endif
 
 # C++ specific options here (added to USE_OPT).
 ifeq ($(USE_CPPOPT),)
-  USE_CPPOPT = -std=c++11 -fno-rtti -fno-non-call-exceptions -fno-exceptions -fno-threadsafe-statics
+  USE_CPPOPT = -fno-rtti -fno-non-call-exceptions -fno-exceptions -fno-threadsafe-statics
 endif
 
 # Enable this if you want the linker to remove unused code and data
@@ -30,13 +36,13 @@ endif
 
 # Enable this if you want link time optimizations (LTO)
 ifeq ($(USE_LTO),)
-  USE_LTO = yes
+  USE_LTO = no
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
-ifeq ($(USE_THUMB),)
-  USE_THUMB = yes
-endif
+#ifeq ($(USE_THUMB),)
+#  USE_THUMB = yes
+#endif
 
 # Enable this if you want to see the full log while compiling.
 ifeq ($(USE_VERBOSE_COMPILE),)
@@ -60,7 +66,7 @@ endif
 # Stack size to be allocated to the Cortex-M process stack. This stack is
 # the stack used by the main() thread.
 ifeq ($(USE_PROCESS_STACKSIZE),)
-  USE_PROCESS_STACKSIZE = 0x4000
+  USE_PROCESS_STACKSIZE = 0x1000
 endif
 
 # Stack size to the allocated to the Cortex-M main/exceptions stack. This
@@ -76,7 +82,8 @@ endif
 
 # FPU-related options.
 ifeq ($(USE_FPU_OPT),)
-  USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv5-sp-d16 -fsingle-precision-constant
+  USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv5-sp-d16
+  USE_FPU_OPT += -fsingle-precision-constant
 endif
 
 #
@@ -90,9 +97,15 @@ endif
 # Define project name here
 PROJECT = exBusPowerBox
 
+# Target settings.
+MCU  = cortex-m7
+
 # Imported source files and paths
 CHIBIOS = c:/ChibiStudio/chibios182
 CONFDIR  := ./cfg
+BUILDDIR := ./build
+DEPDIR   := ./.dep
+
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
 # Startup files.
@@ -108,7 +121,7 @@ include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Auto-build files in ./source recursively.
 include $(CHIBIOS)/tools/mk/autobuild.mk
 # Other files (optional).
-include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
+#include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 
 # Define linker script file here
 LDSCRIPT= $(STARTUPLD)/STM32F746xG.ld
@@ -116,51 +129,33 @@ LDSCRIPT= $(STARTUPLD)/STM32F746xG.ld
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CSRC = $(ALLCSRC) \
-       $(CHIBIOS)/os/various/syscalls.c \
-       $(CHIBIOS)/os/various/evtimer.c \
+		$(CHIBIOS)/os/various/evtimer.c \
  		src/crc.c \
- 		src/usbcfg.c
- 		
+ 		src/gps.c \
+ 		src/ltc2943.c \
+ 		src/max6639.c \
+ 		src/usbcfg.c \
+ 		src/servos.c \
+ 		src/acquisition.c \
+ 		src/jetiBox.c \
+ 		src/exDevice.c \
+ 		src/exBus.c \
+ 		src/main_thread.c \
+ 		src/main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CPPSRC = $(ALLCPPSRC) \
-         src/main.cpp \
-         src/CExPowerBox.cpp \
-         src/CExBus.cpp \
-         src/CExDevice.cpp \
-         src/CExSensor.cpp \
-         src/CGps.cpp \
-         src/CLTC2943.cpp \
-         src/CMAX6639.cpp \
-         src/CJetibox.cpp
+CPPSRC = $(ALLCPPSRC)
 
-# C sources to be compiled in ARM mode regardless of the global setting.
-# NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
-#       option that results in lower performance and larger code size.
-ACSRC =
-
-# C++ sources to be compiled in ARM mode regardless of the global setting.
-# NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
-#       option that results in lower performance and larger code size.
-ACPPSRC =
-
-# C sources to be compiled in THUMB mode regardless of the global setting.
-# NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
-#       option that results in lower performance and larger code size.
-TCSRC =
-
-# C sources to be compiled in THUMB mode regardless of the global setting.
-# NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
-#       option that results in lower performance and larger code size.
-TCPPSRC =
-
-# List ASM source files here
+# List ASM source files here.
 ASMSRC = $(ALLASMSRC)
+
+# List ASM with preprocessor source files here.
 ASMXSRC = $(ALLXASMSRC)
 
-INCDIR = $(CONFDIR) $(ALLINC) $(TESTINC) \
-         $(CHCPPINC) $(CHIBIOS)/os/various
+# Inclusion directories.
+INCDIR = $(CONFDIR) $(ALLINC) \
+		$(CHIBIOS)/os/various
 
 #
 # Project, sources and paths
@@ -169,31 +164,6 @@ INCDIR = $(CONFDIR) $(ALLINC) $(TESTINC) \
 ##############################################################################
 # Compiler settings
 #
-
-MCU  = cortex-m7
-
-#TRGT = arm-elf-
-TRGT = arm-none-eabi-
-CC   = $(TRGT)gcc
-CPPC = $(TRGT)g++
-# Enable loading with g++ only if you need C++ runtime support.
-# NOTE: You can use C++ even without C++ support if you are careful. C++
-#       runtime support makes code size explode.
-#LD   = $(TRGT)gcc
-LD   = $(TRGT)g++
-CP   = $(TRGT)objcopy
-AS   = $(TRGT)gcc -x assembler-with-cpp
-AR   = $(TRGT)ar
-OD   = $(TRGT)objdump
-SZ   = $(TRGT)size
-HEX  = $(CP) -O ihex
-BIN  = $(CP) -O binary
-
-# ARM-specific options here
-AOPT =
-
-# THUMB-specific options here
-TOPT = -mthumb -DTHUMB
 
 # Define C warning options here
 CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
@@ -210,7 +180,12 @@ CPPWARN = -Wall -Wextra -Wundef
 #
 
 # List all user C define here, like -D_DEBUG=1
-UDEFS =
+UDEFS = -DUSE_USB=0
+ifeq ($(RELEASE_BUILD),1)
+	UDEFS += -DRELEASE
+else
+	UDEFS += -DDEBUG=1
+endif
 
 # Define ASM defines here
 UADEFS =
@@ -229,4 +204,5 @@ ULIBS =
 ##############################################################################
 
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
+include $(RULESPATH)/arm-none-eabi.mk
 include $(RULESPATH)/rules.mk

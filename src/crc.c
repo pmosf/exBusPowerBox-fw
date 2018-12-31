@@ -42,39 +42,40 @@ static const uint8_t crc8_table[256] = {0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B,
                                         0x98, 0x9F, 0x8A, 0x8D, 0x84, 0x83,
                                         0xDE, 0xD9, 0xD0, 0xD7, 0xC2, 0xC5,
                                         0xCC, 0xCB, 0xE6, 0xE1, 0xE8, 0xEF,
-                                        0xFA, 0xFD, 0xF4, 0xF3};
+                                        0xFA, 0xFD, 0xF4, 0xF3
+                                       };
 
 static uint16_t crc_ccitt_update(uint16_t crc, uint8_t data) {
-  uint16_t ret_val;
-  data ^= (uint8_t)(crc) & (uint8_t)(0xFF);
-  data ^= data << 4;
-  ret_val = ((((uint16_t)data << 8) | ((crc & 0xFF00) >> 8))
-      ^ (uint8_t)(data >> 4) ^ ((uint16_t)data << 3));
-  return ret_val;
+    uint16_t ret_val;
+    data ^= (uint8_t)(crc) & (uint8_t)(0xFF);
+    data ^= data << 4;
+    ret_val = ((((uint16_t)data << 8) | ((crc & 0xFF00) >> 8))
+               ^ (uint8_t)(data >> 4) ^ ((uint16_t)data << 3));
+    return ret_val;
 }
 
 uint16_t get_crc16(const uint8_t *p, uint8_t len) {
-  uint16_t crc16_data = 0;
-  uint8_t i;
+    uint16_t crc16_data = 0;
+    uint8_t i;
 
-  for (i = 0; i < len; i++) {
-    crc16_data = crc_ccitt_update(crc16_data, p[i]);
-  }
+    for (i = 0; i < len; i++) {
+        crc16_data = crc_ccitt_update(crc16_data, p[i]);
+    }
 
-  return (crc16_data);
+    return (crc16_data);
 }
 
 uint8_t crc8(uint8_t data, const uint8_t crc_seed) {
-  return crc8_table[data ^ crc_seed];
+    return crc8_table[data ^ crc_seed];
 }
 
 uint8_t get_crc8(const uint8_t* data, uint8_t len) {
-  uint8_t crc = 0;
-  uint8_t i;
+    uint8_t crc = 0;
+    uint8_t i;
 
-  for (i = 0; i < len; i++) {
-    crc = crc8_table[data[i] ^ crc];
-  }
+    for (i = 0; i < len; i++) {
+        crc = crc8_table[data[i] ^ crc];
+    }
 
-  return crc;
+    return crc;
 }
