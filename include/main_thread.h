@@ -11,5 +11,5 @@
 #include "hal.h"
 #include "data_types.h"
 
-void mt_init(void);
-void main_thread(void);
+void mtInit(void);
+void mainThread(void);

@@ -10,7 +10,7 @@
 
 static bool exbus_initDone = false;
 
-void exbus_init(exbus_t *ex)
+void exbusInit(exbus_t *ex)
 {
 	chDbgCheck(exbus_initDone != true);
 	chDbgCheck(ex != NULL);
@@ -28,7 +28,7 @@ void exbus_init(exbus_t *ex)
     0x3D 0x01 0x08 Packet_ID 0x3A 0x00 CRC16                   // Telemetry Request EX telemetry (5th byte 0x3A)
     0x3D 0x01 0x09 Packet_ID 0x3B 0x01 0xF0 CRC16              // Jetibox request (5th byte 0x3B)
 */
-bool exbus_decode(exbus_t *ex)
+bool exbusDecode(exbus_t *ex)
 {
 	chDbgCheck(exbus_initDone != false);
 
@@ -90,7 +90,7 @@ bool exbus_decode(exbus_t *ex)
 	return false;
 }
 
-bool exbus_check_crc(exbus_t *ex)
+bool exbusCheckCRC(exbus_t *ex)
 {
 	chDbgCheck(exbus_initDone != false);
 
@@ -104,7 +104,7 @@ bool exbus_check_crc(exbus_t *ex)
 		return JETI_EXBUS_PKT_CRC_OK;
 }
 
-void exbus_reset(exbus_t *ex)
+void exbusReset(exbus_t *ex)
 {
 	chDbgCheck(exbus_initDone != false);
 
@@ -128,7 +128,7 @@ void exbusGetJetibox(exbus_packet_t *exbusPkt)
 	jetiboxProcessKey(exbusPkt->data[0], exbusPkt->data);
 
 	uint16_t crc = get_crc16((const uint8_t *)exbusPkt,
-		                         exbusPkt->pktLen - 2);
+	                         exbusPkt->pktLen - 2);
 
 	exbusPkt->data[exbusPkt->dataLength] = crc;
 	exbusPkt->data[exbusPkt->dataLength + 1] = crc >> 8;

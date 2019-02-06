@@ -44,7 +44,7 @@ enum {
 };
 
 static exdevice_sensor_list_t device[] = {
-	{ ID_DEVICE, "exBBox", "", 0, 0 },
+	{ ID_DEVICE, "exBox", "", 0, 0 },
 	{ ID_VBAT1, "V Bat1", "V", EXSENSOR_TYPE_14b, JETI_DECIMAL_MASK(2) },
 	{ ID_VBAT2, "V Bat2", "V", EXSENSOR_TYPE_14b, JETI_DECIMAL_MASK(2) },
 	{ ID_IBAT1, "I Bat1", "A", EXSENSOR_TYPE_14b, JETI_DECIMAL_MASK(2) },
@@ -90,13 +90,9 @@ static int32_t getSensorValue(int sensor)
 void jetiExInit(void)
 {
 	chDbgCheck(init_done != true);
-	jetibox_init();
+	jetiboxInit();
 
 	init_done = true;
-}
-
-uint8_t jetiExGetJetiBoxPkt(ex_pkt_t *pkt, uint8_t key)
-{
 }
 
 uint8_t jetiExGetNextDataPkt(ex_pkt_t *pkt)

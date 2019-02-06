@@ -41,7 +41,7 @@ int main(void) {
 	servoInit();
 	acqInit();
 	gps_init();
-	mt_init();
+	mtInit();
 
-	main_thread();
+	mainThread();
 }

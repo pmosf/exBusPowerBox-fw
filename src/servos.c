@@ -47,7 +47,7 @@ static PWMConfig pwmConfig[NB_TIM_PWM] = {
 	// TIM8
 	{
 		0, 0, NULL, /* No callback */
-		{	{ PWM_OUTPUT_ACTIVE_HIGH, NULL }, {
+		{	{ PWM_OUTPUT_ACTIVE_HIGH | PWM_COMPLEMENTARY_OUTPUT_ACTIVE_LOW, NULL }, {
 				PWM_OUTPUT_DISABLED, NULL
 			}, { PWM_OUTPUT_DISABLED, NULL }, {
 				PWM_OUTPUT_DISABLED, NULL
@@ -101,15 +101,11 @@ void servoSetPositions(uint16_t *pos)
 {
 	chDbgCheck(servo_initDone != false);
 
-	int servoPositionIndex = 0;
-
 	// update servo with refreshed values
 	for (size_t i = 0; i < NB_TIM_PWM; i++) {
 		for (int j = 0; j < pwmDriver[i]->channels; j++) {
 			if (pwmDriver[i]->config->channels[j].mode) {
-				pwmEnableChannel(pwmDriver[i], j,
-				                 pos[servoPositionIndex++]
-				                 / pwmSettings.widthDivider);
+				pwmEnableChannel(pwmDriver[i], j, *pos++ / pwmSettings.widthDivider);
 			}
 		}
 	}

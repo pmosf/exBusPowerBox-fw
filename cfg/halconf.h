@@ -15,7 +15,7 @@
 */
 
 /**
- * @file    templates/halconf.h
+ * @file    rt/templates/halconf.h
  * @brief   HAL configuration header.
  * @details HAL configuration file, this file allows to enable or disable the
  *          various device drivers from your application. You may also use
@@ -27,6 +27,9 @@
 
 #ifndef HALCONF_H
 #define HALCONF_H
+
+#define _CHIBIOS_HAL_CONF_
+#define _CHIBIOS_HAL_CONF_VER_7_0_
 
 #include "mcuconf.h"
 
@@ -58,12 +61,6 @@
 #define HAL_USE_DAC                 FALSE
 #endif
 
-/**
- * @brief   Enables the EXT subsystem.
- */
-#if !defined(HAL_USE_EXT) || defined(__DOXYGEN__)
-#define HAL_USE_EXT                 FALSE
-#endif
 
 /**
  * @brief   Enables the GPT subsystem.

@@ -14,123 +14,111 @@
 #include "ltc2943.h"
 #include "max6639.h"
 
-static void processExBusTimeout(void);
+static void busTimeout(void);
+static void busError(void);
 static void processTelemetryRequest(void);
 static void processJetibox(void);
-static void processExBusError(void);
 
-static bool init_done = false;
+static bool mtInitDone = false;
 static bool uartDataReceived;
-static uint32_t nbExBusTimeout[NB_EX_UART];
-static uint32_t nbTotalExBusTimeout[NB_EX_UART];
-static SerialDriver *sd[NB_EX_UART] = EX_UARTS;
+static uint32_t nbExBusTimeout[NB_EXBUS_UART];
+static SerialDriver *sd[NB_EXBUS_UART] = EXBUS_UARTS;
 static exbus_t exbus;
-static uint16_t servoPosition[EX_NB_SERVOS];
-static uint16_t servoFailSafePosition[EX_NB_SERVOS];
+static uint16_t servoPosition[NB_SERVOS];
+static uint16_t servoFailSafePosition[NB_SERVOS];
+static const uint8_t servoLUT[NB_SERVOS] = SERVO_LUT;
 
-void mt_init(void)
+void mtInit(void)
 {
-	chDbgCheck(init_done != true);
+	chDbgCheck(mtInitDone != true);
 
 	SerialConfig sd_conf = { EXBUS_UART_SPEED, 0, USART_CR2_STOP_1, USART_CR3_HDSEL };
 
 	uartDataReceived = false;
 
 	// UART and associated variables
-	for (int i = 0; i < NB_EX_UART; ++i) {
+	for (int i = 0; i < NB_EXBUS_UART; ++i) {
 		nbExBusTimeout[i] = 0;
-		nbTotalExBusTimeout[i] = 0;
 		sdStart(sd[i], &sd_conf);
 	}
 
-	for (int i = 0; i < EX_NB_SERVOS; i++) {
+	for (int i = 0; i < NB_SERVOS; i++) {
 		servoPosition[i] = 0;
 		servoFailSafePosition[i] = 1.5E-3 * EXBUS_PWM_FREQ;
 	}
 
-	exbus_init(&exbus);
+	exbusInit(&exbus);
 
-	init_done = true;
+	mtInitDone = true;
 }
 
-void main_thread(void)
+void mainThread(void)
 {
 	chRegSetThreadName("main_thread");
-	chDbgCheck(init_done != false);
+	chDbgCheck(mtInitDone != false);
 
 	while (true) {
 		// set servos to fail-safe positions if no activity on exbus uarts
-		if (exbus.busSel == NB_EX_UART) {
+		if (exbus.uartSel == NB_EXBUS_UART) {
 			servoSetPositions(servoFailSafePosition);
-			exbus.busSel = 0;
+			exbus.uartSel = 0;
 		}
 
 		// wait for data
-		size_t n = chnReadTimeout((BaseChannel *)sd[exbus.busSel],
-		                          &exbus.rx_data, 1, TIME_MS2I(20));
+		size_t n = chnReadTimeout((BaseChannel *)sd[exbus.uartSel], &exbus.rx_data, 1, TIME_MS2I(20));
 
 		// process timeout
 		if (!n) {
-			exbus_reset(&exbus);
+			exbusReset(&exbus);
 			// wait for one valid event before timeout detection
 			if (!exbus.nbExValidPacket || !exbus.isLinkUp) {
 				continue;
 			}
 			// in case of 4 consecutive timeouts, we select another exbus receiver
-			processExBusTimeout();
+			busTimeout();
 			continue;
 		}
 
 		// frame complete ?
-		if (!exbus_decode(&exbus)) {
+		if (!exbusDecode(&exbus)) {
 			continue;
 		}
 
 		exbus.nbExPacket++;
 
-		if (exbus_check_crc(&exbus) == JETI_EXBUS_PKT_CRC_OK) {
+		if (exbusCheckCRC(&exbus) == JETI_EXBUS_PKT_CRC_OK) {
 			exbus.nbExValidPacket++;
 
 			if (exbus.pkt.dataId == JETI_EXBUS_ID_CHANNEL) {
-				uint16_t *p = (__packed uint16_t *)(exbus.pkt.data);
-				for (size_t i = 0; i < EX_NB_SERVOS; i++) {
-					servoPosition[i] = *p++;
+				const uint16_t *p = (const uint16_t *)exbus.pkt.data;
+				for (uint8_t i = 0; i < NB_SERVOS; i++) {
+					servoPosition[servoLUT[i]] = p[i];
 				}
 				exbus.isLinkUp = true;
-				nbExBusTimeout[exbus.busSel] = 0;
+				nbExBusTimeout[exbus.uartSel] = 0;
 				servoSetPositions(servoPosition);
 				// channel data with telemetry request
 				if (exbus.pkt.header[1] == 0x01) {
 					processTelemetryRequest();
 				}
-				exbus_reset(&exbus);
-				continue;
-			}
-			if (exbus.pkt.dataId == JETI_EXBUS_ID_TELEMETRY
-			    && exbus.pkt.header[1] == 1) {
+			} else if (exbus.pkt.dataId == JETI_EXBUS_ID_TELEMETRY && exbus.pkt.header[1] == 1) {
 				exbus.isLinkUp = true;
 				processTelemetryRequest();
-				exbus_reset(&exbus);
-				continue;
-			}
-			if (exbus.pkt.dataId == JETI_EXBUS_ID_JETIBOX
-			    && exbus.pkt.header[1] == 1) {
+			} else if (exbus.pkt.dataId == JETI_EXBUS_ID_JETIBOX && exbus.pkt.header[1] == 1) {
 				exbus.isLinkUp = true;
 				processJetibox();
-				exbus_reset(&exbus);
-				continue;
 			}
+		} else {
+			if (exbus.isLinkUp) {
+				busError();
+			}
+			exbus.nbCrcError[exbus.uartSel]++;
 		}
-
-		if (exbus.isLinkUp) {
-			processExBusError();
-		}
-		exbus.nbExInvalidPacket++;
-		exbus_reset(&exbus);
+		exbusReset(&exbus);
 	}
 }
 
-static void processExBusError(void)
+static void busError(void)
 {
 
 }
@@ -138,7 +126,7 @@ static void processExBusError(void)
 static void processJetibox(void)
 {
 	exbusGetJetibox(&exbus.pkt);
-	chnWrite(sd[exbus.busSel], (const uint8_t *)&exbus.pkt, exbus.pkt.pktLen);
+	chnWrite(sd[exbus.uartSel], (const uint8_t *)&exbus.pkt, exbus.pkt.pktLen);
 }
 
 static void processTelemetryRequest(void)
@@ -152,18 +140,18 @@ static void processTelemetryRequest(void)
 		exbusGetNextDataPkt(&exbus.pkt);
 	}
 
-	chnWrite(sd[exbus.busSel], (const uint8_t *)&exbus.pkt, exbus.pkt.pktLen);
+	chnWrite(sd[exbus.uartSel], (const uint8_t *)&exbus.pkt, exbus.pkt.pktLen);
 #if USE_USB && defined(USB_DEBUG)
-	chnWriteTimeout(&PORTAB_SDU1, (const uint8_t*)&exbus.pkt,
-	                 exbus.pkt.pktLen, TIME_IMMEDIATE);
+	chnWriteTimeout(&PORTAB_SDU1, (const uint8_t *)&exbus.pkt,
+	                exbus.pkt.pktLen, TIME_IMMEDIATE);
 #endif
 }
 
-static void processExBusTimeout(void)
+static void busTimeout(void)
 {
-	nbTotalExBusTimeout[exbus.busSel]++;
-	if (++nbExBusTimeout[exbus.busSel] == 4) {
-		nbExBusTimeout[exbus.busSel] = 0;
-		exbus.busSel++;
+	exbus.nbTimeout[exbus.uartSel]++;
+	if (++nbExBusTimeout[exbus.uartSel] == 4) {
+		nbExBusTimeout[exbus.uartSel] = 0;
+		exbus.uartSel++;
 	}
 }

@@ -6,6 +6,7 @@
 #include "events.h"
 #include "ltc2943.h"
 #include "max6639.h"
+#include "tmp422.h"
 
 #define RPM_CB(pin) chSysLockFromISR();\
     if (palReadLine(pin)) {\
@@ -25,9 +26,12 @@ static THD_FUNCTION(acq_slow_thread, arg);
 static THD_WORKING_AREA(acq_slow_wa, 512);
 static bool init_done = false;
 static mutex_t acqMutex;
-static acq_t acq;
-static acqMinMax_t acqMinMax;
 static sysinterval_t rpm_usperiod[2];
+
+static acq_t acq __attribute__ ((section (".ram5")));//BKPSRAM_BASE
+static uint32_t backupFlag __attribute__ ((section (".ram5")));
+static acqMinMax_t acqMinMax;
+static uint32_t acqCapacityOffset[2];
 
 static void rpm1CB(void *arg);
 static void rpm2CB(void *arg);
@@ -38,8 +42,17 @@ void acqInit(void)
 
 	chMtxObjectInit(&acqMutex);
 
-	max6639Init();
 	ltc2943Init();
+	tmp422Init();
+
+	if (backupFlag != 0xDEADBEEF) {
+		acqCapacityOffset[0] = 0;
+		acqCapacityOffset[1] = 0;
+		backupFlag = 0xDEADBEEF;
+	} else {
+		acqCapacityOffset[0] = acq.capacity[0];
+		acqCapacityOffset[1] = acq.capacity[1];
+	}
 
 	memset(&acq, 0, sizeof(acq));
 	memset(&acqMinMax, 0, sizeof(acqMinMax));
@@ -59,6 +72,13 @@ void acqInit(void)
 	rpm_usperiod[1] = 0;
 
 	init_done = true;
+}
+
+uint8_t acqResetCapacity(uint8_t bat)
+{
+	acqCapacityOffset[bat] = 0;
+
+	return 0;
 }
 
 int32_t acqGetRpm(uint8_t chan)
@@ -89,13 +109,13 @@ int32_t acqGetCapacity(uint8_t chan)
 int32_t acqGetLocalTemp(void)
 {
 	chDbgCheck(init_done != false);
-	return acq.local_temp;
+	return acq.localTemp;
 }
 
 int32_t acqGetExtTemp(uint8_t chan)
 {
 	chDbgCheck(init_done != false);
-	return acq.ext_temp[chan];
+	return acq.extTemp[chan];
 }
 
 __attribute__((noreturn))
@@ -144,11 +164,11 @@ static THD_FUNCTION(acq_slow_thread, arg)
 
 		//chMtxLock(&acqMutex);
 		for (int i = 0; i < NB_LTC2943; i++) {
-			acq.capacity[i] = ltc2943GetCapacity(i);
+			acq.capacity[i] = ltc2943GetCapacity(i) + acqCapacityOffset[i];
 		}
-		acq.local_temp = ltc2943GetTemperature();
-		acq.ext_temp[0] = max6639GetExtTemperature(0);
-		acq.ext_temp[1] = max6639GetExtTemperature(1);
+		acq.localTemp = ltc2943GetTemperature();
+		acq.extTemp[0] = tmp422GetExtTemperature(0);//max6639GetExtTemperature(0);
+		acq.extTemp[1] = tmp422GetExtTemperature(1);//max6639GetExtTemperature(1);
 		//chMtxUnlock(&acqMutex);
 	}
 }

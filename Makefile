@@ -40,13 +40,13 @@ ifeq ($(USE_LTO),)
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
-#ifeq ($(USE_THUMB),)
-#  USE_THUMB = yes
-#endif
+ifeq ($(USE_THUMB),)
+  USE_THUMB = yes
+endif
 
 # Enable this if you want to see the full log while compiling.
 ifeq ($(USE_VERBOSE_COMPILE),)
-  USE_VERBOSE_COMPILE = yes
+  USE_VERBOSE_COMPILE = no
 endif
 
 # If enabled, this option makes the build process faster by not compiling
@@ -66,13 +66,13 @@ endif
 # Stack size to be allocated to the Cortex-M process stack. This stack is
 # the stack used by the main() thread.
 ifeq ($(USE_PROCESS_STACKSIZE),)
-  USE_PROCESS_STACKSIZE = 0x1000
+  USE_PROCESS_STACKSIZE = 0x2000
 endif
 
 # Stack size to the allocated to the Cortex-M main/exceptions stack. This
 # stack is used for processing interrupts and exceptions.
 ifeq ($(USE_EXCEPTIONS_STACKSIZE),)
-  USE_EXCEPTIONS_STACKSIZE = 0x1000
+  USE_EXCEPTIONS_STACKSIZE = 0x2000
 endif
 
 # Enables the use of FPU (no, softfp, hard).
@@ -119,9 +119,6 @@ include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Auto-build files in ./source recursively.
-include $(CHIBIOS)/tools/mk/autobuild.mk
-# Other files (optional).
-#include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 
 # Define linker script file here
 LDSCRIPT= $(STARTUPLD)/STM32F746xG.ld
@@ -134,6 +131,8 @@ CSRC = $(ALLCSRC) \
  		src/gps.c \
  		src/ltc2943.c \
  		src/max6639.c \
+ 		src/tmp422.c \
+ 		src/MS561101BA03.c \
  		src/usbcfg.c \
  		src/servos.c \
  		src/acquisition.c \

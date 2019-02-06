@@ -54,7 +54,7 @@ battery current
 gps
 
 * I2C addresses
-MAX6639: 0x58
+MAX6639: 0x2C
 LTC2943: 0x64
 PCA9543: 0x70
 
@@ -62,3 +62,10 @@ PCA9543: 0x70
 100kHz: 0x00303D5D
 400kHz: 0x0010071B
 1MHz:  0x208
+
+to be updated:
+* TMP422 I2C: 0x4C
+* backup RAM
+Vbat supercap NEXC224Z5.5V10.5X8.5TRF
+backup ram: struct variable_name __attribute__ ((section ("ram5")))
+mcuconf: #define STM32_BKPRAM_ENABLE                 TRUE

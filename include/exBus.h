@@ -34,15 +34,16 @@ typedef struct {
 	uint8_t rx_data;
 	uint32_t nbExPacket;
 	uint32_t nbExValidPacket;
-	uint32_t nbExInvalidPacket;
-	uint8_t busSel;
+	uint32_t nbCrcError[NB_EXBUS_UART];
+	uint32_t nbTimeout[NB_EXBUS_UART];
+	uint8_t uartSel;
 	bool isLinkUp;
 } exbus_t;
 
-void exbus_init(exbus_t *exbus);
-bool exbus_decode(exbus_t *exbus);
-bool exbus_check_crc(exbus_t *exbus);
-void exbus_reset(exbus_t *exbus);
+void exbusInit(exbus_t *exbus);
+bool exbusDecode(exbus_t *exbus);
+bool exbusCheckCRC(exbus_t *exbus);
+void exbusReset(exbus_t *exbus);
 void exbusGetNextTxtPkt(exbus_packet_t *exbusPkt);
 void exbusGetNextDataPkt(exbus_packet_t *exbusPkt);
 void exbusGetJetibox(exbus_packet_t *exbusPkt);

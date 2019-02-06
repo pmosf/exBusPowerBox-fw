@@ -4,7 +4,7 @@
 
 #include "board_conf.h"
 
-#define EX_NB_SERVOS                16
+#define NB_SERVOS                16
 
 void servoSetPwmSettings(uint32_t freq, float period, uint32_t widthDivider);
 void servoSetPositions(uint16_t *pos);
